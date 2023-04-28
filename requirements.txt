@@ -1,0 +1,5 @@
+tts
+pyannote.audio
+python-ffmpeg
+srt
+ass

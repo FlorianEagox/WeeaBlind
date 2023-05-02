@@ -4,8 +4,10 @@ import numpy as np
 from espeakng import ESpeakNG
 import re
 
+from pydub import AudioSegment
+
 start_time = 94
-end_time = 114
+end_time =  124 #1324
 CLEANR = re.compile('<.*?>')
 
 # READ SUBS
@@ -40,26 +42,31 @@ for i in range(total_speakers):
 speakers[1].voice = 'en-us'
 speakers[2].pitch = 90
 
-# Synth
-for sub in subs[start_line:end_line]:
-	text = re.sub(CLEANR, '', sub.content)
-	current_speaker = int(speech_diary_adjusted[find_nearest([line[1] for line in speech_diary_adjusted], sub.start.total_seconds())][0].split('_')[1])
-	speed = int((len(text) / (sub.end.total_seconds() - sub.start.total_seconds())))
-	# speakers[current_speaker].wpm = speed
-	speakers[current_speaker].synth_wav(text, f"./files/{sub.index}.wav")
+total_duration = (end_time - start_time)*1000
+# empty_audio = AudioSegment.silent(duration=total_duration)
+empty_audio = AudioSegment.from_file('saiki.mkv')
 
-def speak(speaker, rate, output):
-	return
+# Synth
+def synth():
+	for sub in subs[start_line:end_line]:
+		text = re.sub(CLEANR, '', sub.content)
+		current_speaker = int(speech_diary_adjusted[find_nearest([line[1] for line in speech_diary_adjusted], sub.start.total_seconds())][0].split('_')[1])
+		speed = 60*int((len(text.split(' ')) / (sub.end.total_seconds() - sub.start.total_seconds())))
+		speakers[current_speaker].speed = speed
+		file_name = f"files/{sub.index}.wav"
+		# speakers[current_speaker].synth_wav(text, file_name)
+		empty_audio = empty_audio.overlay(AudioSegment.from_file(file_name), position=sub.start.total_seconds()*1000)
+	empty_audio.export("out.mkv")
 
 
 # GET THE SUBS
 # stream = ffmpeg.input("./saiki.mkv")
 
 # INITIALIZE THE MODELS
-# tts = TTS(TTS.list_models()[10])
-# # for index, model in enumerate(TTS.list_models()):
-# # 	print(index, model)
-# tts.tts_to_file("This do be a test!", file_path="owo.wav")
+tts = TTS(TTS.list_models()[15])
+for index, model in enumerate(TTS.list_models()):
+	print(index, model)
+tts.tts_to_file("This do be a test!", file_path="owo.wav")
 
 # def tts_thread(text, filename):
 # 	tts.tts_to_file(text, file_path=filename)

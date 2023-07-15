@@ -46,6 +46,8 @@ total_duration = (end_time - start_time)*1000
 # empty_audio = AudioSegment.silent(duration=total_duration)
 empty_audio = AudioSegment.from_file('saiki.mkv')
 
+tts = TTS(model_path='/home/tessa/Downloads/LibriTTS', config_path='/home/tessa/Downloads/LibriTTS/config.json') #TTS.list_models()[8]) # 8 13
+
 # Synth
 def synth():
 	for sub in subs[start_line:end_line]:
@@ -55,18 +57,25 @@ def synth():
 		speakers[current_speaker].speed = speed
 		file_name = f"files/{sub.index}.wav"
 		# speakers[current_speaker].synth_wav(text, file_name)
-		empty_audio = empty_audio.overlay(AudioSegment.from_file(file_name), position=sub.start.total_seconds()*1000)
-	empty_audio.export("out.mkv")
+		print(text)
+		tts.tts_to_file(text, file_path=file_name)
+		# empty_audio = empty_audio.overlay(AudioSegment.from_file(file_name), position=sub.start.total_seconds()*1000)
+	# empty_audio.export("out.wav")
 
+# synth()
+# print('\n\nSPEAKERS\n', tts.speakers)
 
 # GET THE SUBS
 # stream = ffmpeg.input("./saiki.mkv")
 
 # INITIALIZE THE MODELS
-tts = TTS(TTS.list_models()[15])
-for index, model in enumerate(TTS.list_models()):
-	print(index, model)
-tts.tts_to_file("This do be a test!", file_path="owo.wav")
+
+# for (index, model) in enumerate(TTS.list_models()):
+# 	TTS.voc
+# 	if '/en/' in model:
+# 		print(index, model)
+
+tts.tts_to_file("This do be a new test!", 'owo.wav')
 
 # def tts_thread(text, filename):
 # 	tts.tts_to_file(text, file_path=filename)

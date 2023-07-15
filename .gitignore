@@ -1,3 +1,5 @@
 venv
 *.mkv
 *.wav
+*.mp3
+*.mp4

@@ -1,4 +1,5 @@
 venv
+.venv
 *.mkv
 *.wav
 *.mp3

@@ -1,14 +1,16 @@
 import srt
 from TTS.api import TTS
 import numpy as np
-from espeakng import ESpeakNG
 import re
-
+import Voice
 from pydub import AudioSegment
 
 start_time = 94
 end_time =  124 #1324
 CLEANR = re.compile('<.*?>')
+
+
+g = ESpeakNG(voice='eng')
 
 # READ SUBS
 raw_subs = ""
@@ -34,31 +36,29 @@ end_line = find_nearest([sub.start.total_seconds() for sub in subs], end_time)
 speech_diary_adjusted = [[line[0], line[1] + subs[start_line].start.total_seconds(), line[2]] for line in speech_diary]
 
 # Create unique speakers
-total_speakers = len(set(line[0] for line in speech_diary))
+total_speakers = len(set(line[0] for line in speech_diary)) # determine the total number of speakers in the diary
 speakers = []
 for i in range(total_speakers):
-	speakers.append(ESpeakNG(voice='en'))
+	speakers.append(Voice(Voice.VoiceType.ESPEAK, []))
 
-speakers[1].voice = 'en-us'
-speakers[2].pitch = 90
+speakers[1].set_voice_params('en-us')
+speakers[2].set_voice_params(**{'pitch': 90})
 
 total_duration = (end_time - start_time)*1000
 # empty_audio = AudioSegment.silent(duration=total_duration)
 empty_audio = AudioSegment.from_file('saiki.mkv')
 
-tts = TTS(model_path='/home/tessa/Downloads/LibriTTS', config_path='/home/tessa/Downloads/LibriTTS/config.json') #TTS.list_models()[8]) # 8 13
+tts = Voice(Voice.VoiceType.COQUI, TTS.list_models()[8]) # 8 13) # {'model_path': '/home/tessa/Downloads/LibriTTS', 'config_path': '/home/tessa/Downloads/LibriTTS/config.json'})
 
 # Synth
 def synth():
 	for sub in subs[start_line:end_line]:
 		text = re.sub(CLEANR, '', sub.content)
 		current_speaker = int(speech_diary_adjusted[find_nearest([line[1] for line in speech_diary_adjusted], sub.start.total_seconds())][0].split('_')[1])
-		speed = 60*int((len(text.split(' ')) / (sub.end.total_seconds() - sub.start.total_seconds())))
-		speakers[current_speaker].speed = speed
+		current_speaker.set_speed(60*int((len(text.split(' ')) / (sub.end.total_seconds() - sub.start.total_seconds()))))
 		file_name = f"files/{sub.index}.wav"
-		# speakers[current_speaker].synth_wav(text, file_name)
+		current_speaker.speak(text, file_name)
 		print(text)
-		tts.tts_to_file(text, file_path=file_name)
 		# empty_audio = empty_audio.overlay(AudioSegment.from_file(file_name), position=sub.start.total_seconds()*1000)
 	# empty_audio.export("out.wav")
 

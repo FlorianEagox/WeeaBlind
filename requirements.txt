@@ -3,3 +3,6 @@ pyannote.audio
 python-ffmpeg
 srt
 ass
+py-espeak-ng
+pydub
+numpy

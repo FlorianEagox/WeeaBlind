@@ -1,4 +1,6 @@
 from enum import Enum, auto
+from TTS.api import TTS
+
 from espeakng import ESpeakNG
 
 
@@ -14,7 +16,7 @@ class Voice:
 			self.voice = ESpeakNG()
 			self.set_voice_params(init_args)
 		elif voice_type == self.VoiceType.COQUI:
-			tts = TTS(init_args)
+			self.voice = TTS(init_args)
 	def speak(self, text, file_name):
 		if self.voice_type == self.VoiceType.ESPEAK:
 			self.voice.synth_wav(text, file_name)

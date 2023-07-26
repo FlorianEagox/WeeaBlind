@@ -2,15 +2,12 @@ import srt
 from TTS.api import TTS
 import numpy as np
 import re
-import Voice
+from Voice import Voice
 from pydub import AudioSegment
 
 start_time = 94
 end_time =  124 #1324
 CLEANR = re.compile('<.*?>')
-
-
-g = ESpeakNG(voice='eng')
 
 # READ SUBS
 raw_subs = ""
@@ -75,7 +72,7 @@ def synth():
 # 	if '/en/' in model:
 # 		print(index, model)
 
-tts.tts_to_file("This do be a new test!", 'owo.wav')
+tts.speak("This do be a new test!", 'owo.wav')
 
 # def tts_thread(text, filename):
 # 	tts.tts_to_file(text, file_path=filename)

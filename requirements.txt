@@ -5,4 +5,3 @@ srt
 ass
 py-espeak-ng
 pydub
-numpy

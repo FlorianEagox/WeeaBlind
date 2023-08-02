@@ -1,20 +1,21 @@
+import pyttsx3
 import ffmpeg
 import srt
-from TTS.api import TTS
+# from TTS.api import TTS
 import numpy as np
 import re
 from Voice import Voice
-from pydub import AudioSegment
+# # from pydub import AudioSegment
 
 # READ SUBS
 def get_subs(file):
 	output = f"output/{file.split('.')[0]}.srt"
-	(
-		ffmpeg
-		.input(file)
-		.output(output)
-		.run()
-	)
+	# (
+	# 	ffmpeg
+	# 	.input(file)
+	# 	.output(output)
+	# 	.run()
+	# )
 	with open(output, "r") as f:
 		return list(srt.parse(f.read()))
 
@@ -32,9 +33,7 @@ def find_nearest(array, value):
 	return (np.abs(np.asarray(array) - value)).argmin()
 
 subs = get_subs("saiki.mkv")
-print(subs)
 speech_diary = read_diary("audio.rttm")
-print(speech_diary)
 
 start_time = 94
 end_time =  124 #1324
@@ -44,22 +43,25 @@ start_line = find_nearest([sub.start.total_seconds() for sub in subs], start_tim
 end_line = find_nearest([sub.start.total_seconds() for sub in subs], end_time)
 speech_diary_adjusted = [[line[0], line[1] + subs[start_line].start.total_seconds(), line[2]] for line in speech_diary]
 
-# Create unique speakers
+# # Create unique speakers
 total_speakers = len(set(line[0] for line in speech_diary)) # determine the total number of speakers in the diary
-speakers = []
-for i in range(total_speakers):
-	speakers.append(Voice(Voice.VoiceType.ESPEAK, []))
+def initialize_speakers(speaker_count):
+	speakers = []
+	for i in range(total_speakers):
+		speakers.append(Voice(Voice.VoiceType.SAPI5, [], f"Voice {i}"))
+	return speakers
+speakers = initialize_speakers(total_speakers)
 
-speakers[1].set_voice_params('en-us')
-speakers[2].set_voice_params(**{'pitch': 90})
+speakers[1].set_voice_params(voice=1)
+# speakers[2].set_voice_params(**{'pitch': 90})
 
 total_duration = (end_time - start_time)*1000
-# empty_audio = AudioSegment.silent(duration=total_duration)
-empty_audio = AudioSegment.from_file('saiki.mkv')
+# # empty_audio = AudioSegment.silent(duration=total_duration)
+# # empty_audio = AudioSegment.from_file('saiki.mkv')
 
-tts = Voice(Voice.VoiceType.COQUI, TTS.list_models()[8]) # 8 13) # {'model_path': '/home/tessa/Downloads/LibriTTS', 'config_path': '/home/tessa/Downloads/LibriTTS/config.json'})
+# # tts = Voice(Voice.VoiceType.COQUI, TTS.list_models()[8]) # 8 13) # {'model_path': '/home/tessa/Downloads/LibriTTS', 'config_path': '/home/tessa/Downloads/LibriTTS/config.json'})
 
-# Synth
+# # Synth
 def synth():
 	for sub in subs[start_line:end_line]:
 		text = re.sub(CLEANR, '', sub.content)
@@ -71,9 +73,14 @@ def synth():
 		# empty_audio = empty_audio.overlay(AudioSegment.from_file(file_name), position=sub.start.total_seconds()*1000)
 	# empty_audio.export("out.wav")
 
-# synth()
-# print('\n\nSPEAKERS\n', tts.speakers)
+# # synth()
+# # print('\n\nSPEAKERS\n', tts.speakers)
 
-# LIST ALL COQUI Models	
-# for (index, model) in enumerate(TTS.list_models()):
-# 	if '/en/' in model: print(index, model)
+# # LIST ALL COQUI Models	
+# # for (index, model) in enumerate(TTS.list_models()):
+# # 	if '/en/' in model: print(index, model)
+
+
+sampler = pyttsx3.init()
+sampler.save_to_file("This is the sampler", "output/test.wav")
+sampler.runAndWait()

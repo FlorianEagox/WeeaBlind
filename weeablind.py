@@ -28,7 +28,6 @@ def update_voice(event):
 
 def update_voice_fields(event):
 	txt_voice_name.Value = synth.speakers[lb_voices.GetSelection()].name
-	print("UPDATING")
 
 panel = wx.Panel(frame)
 btn_choose_file = wx.Button(panel, label="Choose FIle")
@@ -56,12 +55,15 @@ sizer.Add(lbl_title, 0, wx.ALL|wx.CENTER, 5)
 sizer.Add(txt_main_file, 0, wx.ALL|wx.EXPAND, 5)
 sizer.Add(btn_choose_file, 0, wx.ALL|wx.ALIGN_RIGHT, 5)
 sizer.Add(lb_voices, 0, wx.ALL|wx.ALIGN_LEFT, 5)
-sizer.Add(lbl_voice_name, 0, wx.ALL|wx.ALIGN_LEFT, 5)
-sizer.Add(txt_voice_name, 0, wx.ALL|wx.ALIGN_LEFT, 5)
-sizer.Add(txt_sample_synth, 0, wx.ALL|wx.ALIGN_LEFT, 5)
-sizer.Add(cb_voice_types, 0, wx.ALL|wx.ALIGN_LEFT, 5)
-sizer.Add(btn_sample, 0, wx.ALL|wx.ALIGN_RIGHT, 5)
-sizer.Add(btn_update_voice, 0, wx.ALL|wx.ALIGN_LEFT, 5)
+szr_voice_params = wx.BoxSizer(wx.VERTICAL)
+szr_voice_params.Add(lbl_voice_name, 0, wx.ALL|wx.ALIGN_LEFT, 5)
+szr_voice_params.Add(txt_voice_name, 0, wx.ALL|wx.ALIGN_LEFT, 5)
+szr_voice_params.Add(cb_voice_types, 0, wx.ALL|wx.ALIGN_LEFT, 5)
+szr_voice_params.Add(txt_sample_synth, 0, wx.ALL|wx.ALIGN_LEFT, 5)
+szr_voice_params.Add(btn_sample, 0, wx.ALL|wx.ALIGN_RIGHT, 5)
+szr_voice_params.Add(btn_update_voice, 0, wx.ALL|wx.ALIGN_LEFT, 5)
+
+sizer.Add(szr_voice_params)
 
 panel.SetSizer(sizer)
 

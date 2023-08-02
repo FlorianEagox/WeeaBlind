@@ -4,7 +4,7 @@ import srt
 # from TTS.api import TTS
 import numpy as np
 import re
-from Voice import Voice
+import Voice
 # # from pydub import AudioSegment
 
 # READ SUBS
@@ -48,7 +48,7 @@ total_speakers = len(set(line[0] for line in speech_diary)) # determine the tota
 def initialize_speakers(speaker_count):
 	speakers = []
 	for i in range(total_speakers):
-		speakers.append(Voice(Voice.VoiceType.SAPI5, [], f"Voice {i}"))
+		speakers.append(Voice.SAPI5Voice([], f"Voice {i}"))
 	return speakers
 speakers = initialize_speakers(total_speakers)
 
@@ -82,5 +82,6 @@ def synth():
 
 
 sampler = pyttsx3.init()
+ 
 sampler.save_to_file("This is the sampler", "output/test.wav")
 sampler.runAndWait()

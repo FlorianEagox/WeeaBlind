@@ -6,9 +6,9 @@ from espeakng import ESpeakNG
 
 class Voice:
 	class VoiceType(Enum):
-		ESPEAK = auto()
-		COQUI = auto()
-		SAPI5 = auto()
+		ESPEAK = "ESpeak"
+		COQUI = "Coqui TTS"
+		SAPI5 = "Microsoft SAPI5"
 	speed = 0
 	voice = None
 	def __init__(self, voice_type, init_args=[], name="Unnamed"):

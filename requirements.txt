@@ -5,3 +5,4 @@ srt
 ass
 py-espeak-ng
 pydub
+wxpython

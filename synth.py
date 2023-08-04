@@ -1,3 +1,5 @@
+# This file just has an MVP function, a whole bunch of functions and testing things that'll be refactored.
+
 import pyttsx3
 import ffmpeg
 import srt
@@ -6,6 +8,7 @@ import numpy as np
 import re
 import Voice
 # # from pydub import AudioSegment
+from mimic3_tts import tts as m3
 
 # READ SUBS
 def get_subs(file):
@@ -75,13 +78,14 @@ def synth():
 
 # # synth()
 # # print('\n\nSPEAKERS\n', tts.speakers)
-
+from TTS.api import TTS
 # # LIST ALL COQUI Models	
-# # for (index, model) in enumerate(TTS.list_models()):
-# # 	if '/en/' in model: print(index, model)
+# for (index, model) in enumerate(TTS.list_models()):
+	# if '/en/' in model: print(index, model)
+	# print(index, model)
 
+# tts = TTS()
 
-sampler = pyttsx3.init()
- 
-sampler.save_to_file("This is the sampler", "output/test.wav")
-sampler.runAndWait()
+# tts.load_tts_model_by_name('tts_models/en/vctk/vits')
+# for speaker in tts.speakers:
+# 	tts.tts_to_file("flipping heck guys I need to awoo", speaker=speaker, file_path=f"output/{speaker}.wav", gpu=True)

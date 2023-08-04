@@ -6,7 +6,7 @@ from pydub import AudioSegment
 from pydub.playback import play
 
 app = wx.App(False)
-frame = wx.Frame(None, wx.ID_ANY, "WeeaBlind", size=(800, 600))
+frame = wx.Frame(None, wx.ID_ANY, "WeeaBlind", size=(800, 800))
 frame.Center
 
 currentSpeaker = synth.speakers[0]
@@ -36,11 +36,22 @@ def update_voice(event):
 	currentSpeaker = sampleSpeaker
 	update_voices_list()
 
+def show_multispeaker():
+	if sampleSpeaker.voice_type == Voice.VoiceType.COQUI and sampleSpeaker.is_multispeaker:
+		cb_speaker_voices.Show()
+		cb_speaker_voices.Set(sampleSpeaker.list_speakers())
+		cb_speaker_voices.SetValue(sampleSpeaker.speaker)
+	else:
+		cb_speaker_voices.Hide()
+	panel.Layout()
+
 def update_voice_fields(event):
 	txt_voice_name.Value = currentSpeaker.name
 	cb_voice_types.Select(list(Voice.VoiceType.__members__.values()).index(sampleSpeaker.voice_type))
 	cb_voice_options.Set(sampleSpeaker.list_voice_options())
 	cb_voice_options.Select(sampleSpeaker.list_voice_options().index(currentSpeaker.voice_option))
+	show_multispeaker()
+
 
 def on_voice_change(event):
 	global currentSpeaker, sampleSpeaker # This is bad, I have no idea why it's not recognized?
@@ -55,6 +66,11 @@ def change_voice_type(event):
 
 def change_voice_params(event):
 	sampleSpeaker.set_voice_params(cb_voice_options.GetStringSelection())
+	if sampleSpeaker.voice_type == Voice.VoiceType.COQUI and sampleSpeaker.is_multispeaker:
+		sampleSpeaker.set_voice_params(speaker=cb_speaker_voices.GetStringSelection())
+	else:
+		sampleSpeaker.set_voice_params(speaker=None)
+	show_multispeaker()
 
 panel = wx.Panel(frame)
 btn_choose_file = wx.Button(panel, label="Choose FIle")
@@ -71,12 +87,18 @@ lb_voices = wx.ListBox(panel, choices=[speaker.name for speaker in synth.speaker
 lb_voices.Bind(wx.EVT_LISTBOX, on_voice_change)
 lb_voices.Select(0)
 
+
 # EDIT VOICE PARAMS
 lbl_voice_name = wx.StaticText(panel, label="Name")
 cb_voice_types = wx.ComboBox(panel, style= wx.CB_READONLY, choices=[str(val) for val in Voice.VoiceType])
 cb_voice_types.Bind(wx.EVT_COMBOBOX, change_voice_type)
 cb_voice_options = wx.ComboBox(panel, style= wx.CB_READONLY, choices=currentSpeaker.list_voice_options())
 cb_voice_options.Bind(wx.EVT_COMBOBOX, change_voice_params)
+
+# Show a dropdown box for multi-speaker Coqui models
+cb_speaker_voices = wx.ComboBox(panel, style=wx.CB_READONLY, choices=[])
+cb_speaker_voices.Bind(wx.EVT_COMBOBOX, change_voice_params)
+cb_speaker_voices.Hide()  # Hide by default, show only when multi-speaker Coqui model is selected
 
 # SAMPLE CURRENT VOICE
 txt_voice_name = wx.TextCtrl(panel, value=currentSpeaker.name)
@@ -101,6 +123,7 @@ szr_voice_params.Add(lbl_voice_name, 0, wx.ALL|wx.ALIGN_LEFT, 5)
 szr_voice_params.Add(txt_voice_name, 0, wx.ALL|wx.ALIGN_LEFT, 5)
 szr_voice_params.Add(cb_voice_types, 0, wx.ALL|wx.ALIGN_LEFT, 5)
 szr_voice_params.Add(cb_voice_options, 0, wx.ALL|wx.ALIGN_LEFT, 5)
+szr_voice_params.Add(cb_speaker_voices, 0, wx.ALL|wx.ALIGN_LEFT, 5)
 szr_voice_params.Add(txt_sample_synth, 0, wx.ALL|wx.EXPAND, 5)
 szr_voice_params.Add(btn_sample, 0, wx.ALL|wx.ALIGN_RIGHT, 5)
 szr_voice_params.Add(btn_update_voice, 0, wx.ALL|wx.ALIGN_LEFT, 5)

@@ -2,6 +2,8 @@ import wx
 import synth
 from Voice import Voice
 from torch.cuda import is_available
+from pydub import AudioSegment
+from pydub.playback import play
 
 app = wx.App(False)
 frame = wx.Frame(None, wx.ID_ANY, "WeeaBlind", size=(800, 600))
@@ -20,21 +22,25 @@ def open_file(evenet):
 		dlg.Destroy()
 
 def sample(event):
-	sampleSpeaker.speak(txt_sample_synth.Value, "output/sample.wav")
+	output = "output/sample.wav"
+	sampleSpeaker.speak(txt_sample_synth.Value, output)
+	play(AudioSegment.from_file(output))
 
 def update_voices_list():
 	lb_voices.Set([speaker.name for speaker in synth.speakers])
 
 def update_voice(event):
-	global currentSpeaker
+	global currentSpeaker, sampleSpeaker
+	sampleSpeaker.name = txt_voice_name.Value
+	synth.speakers[synth.speakers.index(currentSpeaker)] = sampleSpeaker
 	currentSpeaker = sampleSpeaker
-	currentSpeaker.name = txt_voice_name.Value
 	update_voices_list()
 
 def update_voice_fields(event):
 	txt_voice_name.Value = currentSpeaker.name
 	cb_voice_types.Select(list(Voice.VoiceType.__members__.values()).index(sampleSpeaker.voice_type))
-	print('meep')
+	cb_voice_options.Set(sampleSpeaker.list_voice_options())
+	cb_voice_options.Select(sampleSpeaker.list_voice_options().index(currentSpeaker.voice_option))
 
 def on_voice_change(event):
 	global currentSpeaker, sampleSpeaker # This is bad, I have no idea why it's not recognized?
@@ -45,7 +51,7 @@ def on_voice_change(event):
 def change_voice_type(event):
 	global sampleSpeaker
 	sampleSpeaker = Voice(list(Voice.VoiceType.__members__.values())[cb_voice_types.GetSelection()])
-	cb_voice_options.Set(sampleSpeaker.list_voice_options())
+	update_voice_fields(event)
 
 def change_voice_params(event):
 	sampleSpeaker.set_voice_params(cb_voice_options.GetStringSelection())

@@ -75,6 +75,7 @@ class CoquiVoice(Voice):
 
     def set_voice_params(self, voice=None):
         self.voice.load_tts_model_by_name(voice)
+        self.voice_option = self.voice.model_name
 
     def list_voice_options(self):
         return TTS.list_models()
@@ -83,6 +84,7 @@ class SAPI5Voice(Voice):
     def __init__(self, init_args=[], name="Unnamed"):
         super().__init__(Voice.VoiceType.SAPI5, init_args, name)
         self.voice = pyttsx3.init(*init_args)
+        self.voice_option = self.voice.getProperty('voice')
 
     def speak(self, text, file_name):
         self.voice.save_to_file(text, file_name)
@@ -93,7 +95,8 @@ class SAPI5Voice(Voice):
 
     def set_voice_params(self, voice=None, pitch=None):
         if voice:
-            self.voice.setProperty('voice', self.voice.getProperty('voices')[voice].id)
+            self.voice_option = self.voice.getProperty('voice')
+            self.voice.setProperty('voice', voice)
 
     def list_voice_options(self):
         return [voice.name for voice in self.voice.getProperty('voices')]

@@ -22,9 +22,9 @@ def open_file(evenet):
 			txt_main_file.Value = dlg.GetPath()
 		dlg.Destroy()
 
-
 def update_voices_list():
 	lb_voices.Set([speaker.name for speaker in synth.speakers])
+	lb_voices.Select(lb_voices.Strings.index(currentSpeaker.name))
 
 def on_voice_change(event):
 	global currentSpeaker, sampleSpeaker # This is bad, I have no idea why it's not recognized?
@@ -89,7 +89,7 @@ class ConfigureVoiceTab(wx.Panel):
 			self.cb_speaker_voices.Set(sampleSpeaker.list_speakers())
 			self.cb_speaker_voices.SetValue(sampleSpeaker.speaker)
 		else:
-			cb_speaker_voices.Hide()
+			self.cb_speaker_voices.Hide()
 		panel.Layout()
 
 	def update_voice_fields(self, event):
@@ -107,10 +107,70 @@ class ConfigureVoiceTab(wx.Panel):
 	def change_voice_params(self, event):
 		sampleSpeaker.set_voice_params(self.cb_voice_options.GetStringSelection())
 		if sampleSpeaker.voice_type == Voice.VoiceType.COQUI and sampleSpeaker.is_multispeaker:
-			sampleSpeaker.set_voice_params(speaker=cb_speaker_voices.GetStringSelection())
+			sampleSpeaker.set_voice_params(speaker=self.cb_speaker_voices.GetStringSelection())
 		else:
 			sampleSpeaker.set_voice_params(speaker=None)
 		self.show_multispeaker()
+
+class DiarizationEntry(wx.Panel):
+	def __init__(self, parent, start_time, end_time, speaker, text):
+		super().__init__(parent)
+
+		entry_box = wx.StaticBox(self, label=f"{start_time:.2f} - {end_time:.2f}")
+		entry_sizer = wx.StaticBoxSizer(entry_box, wx.VERTICAL)
+
+		text_label = wx.StaticText(self, label=f"Speaker: {speaker}\nText: {text}")
+		entry_sizer.Add(text_label, 0, wx.EXPAND | wx.ALL, border=5)
+
+		playback_button = wx.Button(self, label="Play")
+		playback_button.Bind(wx.EVT_BUTTON, self.on_playback_button_click)
+		entry_sizer.Add(playback_button, 0, wx.ALIGN_LEFT | wx.ALL, border=5)
+
+		sample_button = wx.Button(self, label="Sample")
+		sample_button.Bind(wx.EVT_BUTTON, self.on_sample_button_click)
+		entry_sizer.Add(sample_button, 0, wx.ALIGN_LEFT | wx.ALL, border=5)
+
+		self.SetSizerAndFit(entry_sizer)
+
+	def on_playback_button_click(self, event):
+		# Implement playback functionality here
+		pass
+
+	def on_sample_button_click(self, event):
+		# Implement sample functionality here
+		pass
+
+class DiarizationTab(wx.Panel):
+	def __init__(self, parent):
+		super().__init__(parent)
+
+		self.scroll_panel = wx.ScrolledWindow(self, style=wx.VSCROLL)
+		self.scroll_sizer = wx.BoxSizer(wx.VERTICAL)
+		self.scroll_panel.SetSizer(self.scroll_sizer)
+		self.scroll_panel.SetScrollRate(0, 20)  # Add scroll rate (pixels per scroll step)
+
+		self.create_entries()
+
+		main_sizer = wx.BoxSizer(wx.VERTICAL)
+		main_sizer.Add(self.scroll_panel, 1, wx.EXPAND | wx.ALL, border=10)
+
+		self.SetSizerAndFit(main_sizer)
+
+	def create_entries(self):
+		rttm_data = synth.speech_diary_adjusted
+		print(len(rttm_data), len(synth.subs_adjusted))
+		for entry in rttm_data:
+			diarization_entry = DiarizationEntry(
+				self.scroll_panel,
+				start_time=entry[1],
+				end_time=entry[2],
+				speaker=entry[0],
+				text=synth.subs_adjusted[synth.find_nearest([sub.start.total_seconds() for sub in synth.subs_adjusted], entry[1])].content
+			)
+			self.scroll_sizer.Add(diarization_entry, 0, wx.EXPAND | wx.ALL, border=5)
+
+		self.scroll_sizer.Layout()
+
 
 panel = wx.Panel(frame)
 btn_choose_file = wx.Button(panel, label="Choose FIle")
@@ -130,7 +190,7 @@ lb_voices.Select(0)
 tab_control = wx.Notebook(panel)
 tab_voice_config = ConfigureVoiceTab(tab_control)
 tab_control.AddPage(tab_voice_config, "Configure Voices")
-
+tab_control.AddPage(DiarizationTab(tab_control), "Diarization")
 
 on_voice_change(None)
 

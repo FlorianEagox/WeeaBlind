@@ -44,7 +44,9 @@ CLEANR = re.compile('<.*?>')
 
 start_line = find_nearest([sub.start.total_seconds() for sub in subs], start_time)
 end_line = find_nearest([sub.start.total_seconds() for sub in subs], end_time)
-speech_diary_adjusted = [[line[0], line[1] + subs[start_line].start.total_seconds(), line[2]] for line in speech_diary]
+# Time Shift the speech diary to be in line with the start time
+speech_diary_adjusted = [[line[0], line[1] + start_time, line[2]] for line in speech_diary]
+speech_diary_adjusted = speech_diary_adjusted[find_nearest([line[1] for line in speech_diary_adjusted], start_time):find_nearest([line[1] for line in speech_diary_adjusted], end_line)]
 
 # # Create unique speakers
 total_speakers = len(set(line[0] for line in speech_diary)) # determine the total number of speakers in the diary
@@ -54,22 +56,25 @@ def initialize_speakers(speaker_count):
 		speakers.append(Voice.SAPI5Voice([], f"Voice {i}"))
 	return speakers
 speakers = initialize_speakers(total_speakers)
-speakers[0] = Voice.Voice(Voice.Voice.VoiceType.COQUI)
-speakers[0].set_voice_params('tts_models/en/vctk/vits', 'p326')
-speakers[1] = Voice.CoquiVoice(Voice.Voice.VoiceType.COQUI)
-speakers[1].set_voice_params('tts_models/en/vctk/vits', 'p340')
+# speakers[0] = Voice.Voice(Voice.Voice.VoiceType.COQUI)
+# speakers[0].set_voice_params('tts_models/en/vctk/vits', 'p326')
+# speakers[1] = Voice.CoquiVoice(Voice.Voice.VoiceType.COQUI)
+# speakers[1].set_voice_params('tts_models/en/vctk/vits', 'p340')
 
 
 total_duration = (end_time - start_time)*1000
 # # empty_audio = AudioSegment.silent(duration=total_duration)
 # # empty_audio = AudioSegment.from_file('saiki.mkv')
 
-# # tts = Voice(Voice.VoiceType.COQUI, TTS.list_models()[8]) # 8 13) # {'model_path': '/home/tessa/Downloads/LibriTTS', 'config_path': '/home/tessa/Downloads/LibriTTS/config.json'})
+subs_adjusted = subs[start_line:end_line]
+for sub in subs_adjusted:
+	sub.content = re.sub(CLEANR, '', sub.content)
 
 # # Synth
 def synth():
-	for sub in subs[start_line:end_line]:
+	for sub in subs_adjusted:
 		text = re.sub(CLEANR, '', sub.content)
+		# 🤔 How the FRICK does this line work? 🤔
 		current_speaker = int(speech_diary_adjusted[find_nearest([line[1] for line in speech_diary_adjusted], sub.start.total_seconds())][0].split('_')[1])
 		current_speaker.set_speed(60*int((len(text.split(' ')) / (sub.end.total_seconds() - sub.start.total_seconds()))))
 		file_name = f"files/{sub.index}.wav"

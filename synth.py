@@ -3,7 +3,7 @@
 import pyttsx3
 import ffmpeg
 import srt
-# from TTS.api import TTS
+from TTS.api import TTS
 import numpy as np
 import re
 import Voice
@@ -54,9 +54,11 @@ def initialize_speakers(speaker_count):
 		speakers.append(Voice.SAPI5Voice([], f"Voice {i}"))
 	return speakers
 speakers = initialize_speakers(total_speakers)
+speakers[0] = Voice.Voice(Voice.Voice.VoiceType.COQUI)
+speakers[0].set_voice_params('tts_models/en/vctk/vits', 'p326')
+speakers[1] = Voice.CoquiVoice(Voice.Voice.VoiceType.COQUI)
+speakers[1].set_voice_params('tts_models/en/vctk/vits', 'p340')
 
-speakers[1].set_voice_params(voice=1)
-# speakers[2].set_voice_params(**{'pitch': 90})
 
 total_duration = (end_time - start_time)*1000
 # # empty_audio = AudioSegment.silent(duration=total_duration)
@@ -73,12 +75,12 @@ def synth():
 		file_name = f"files/{sub.index}.wav"
 		current_speaker.speak(text, file_name)
 		print(text)
-		# empty_audio = empty_audio.overlay(AudioSegment.from_file(file_name), position=sub.start.total_seconds()*1000)
-	# empty_audio.export("out.wav")
+		empty_audio = empty_audio.overlay(AudioSegment.from_file(file_name), position=sub.start.total_seconds()*1000)
+	empty_audio.export("new.wav")
 
-# # synth()
+# synth()
 # # print('\n\nSPEAKERS\n', tts.speakers)
-from TTS.api import TTS
+
 # # LIST ALL COQUI Models	
 # for (index, model) in enumerate(TTS.list_models()):
 	# if '/en/' in model: print(index, model)

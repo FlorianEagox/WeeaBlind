@@ -63,7 +63,7 @@ class ESpeakVoice(Voice):
 		pass
 
 class CoquiVoice(Voice):
-	def __init__(self, init_args=[], name="Unnamed"):
+	def __init__(self, init_args=None, name="Unnamed"):
 		super().__init__(Voice.VoiceType.COQUI, init_args, name)
 		self.voice = TTS()
 		self.is_multispeaker = False

@@ -6,3 +6,4 @@ ass
 py-espeak-ng
 pydub
 wxpython
+pyttsx3

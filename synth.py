@@ -81,3 +81,8 @@ def synth():
 		print(text)
 		empty_audio = empty_audio.overlay(AudioSegment.from_file(file_name), position=sub.start.total_seconds()*1000)
 	empty_audio.export("new.wav")
+
+currentSpeaker = speakers[0]
+sampleSpeaker = currentSpeaker
+
+print(ffmpeg.probe("saiki.mkv"))

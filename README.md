@@ -15,34 +15,34 @@ This project relies on some rudimentary slapping together of some very complicat
 This is mega-WIP, not even MVP, so idk. Email me or make an issue if you want to contribute or point me in a better direction, idk what I'm doing.
 
 ## Things to do:
-	- GUI tab to list and select audio / subtitle streams w/ FFMPEG
-	- Move the tabs into their own classes
-	- Add labels and screen reader landmarks to all the controls
-	- Single speaker or multispeaker control switch
-	- Download YouTube video with Closed Captions
-	- GUI to select start and end time for dubbing
-	- Use OCR to generate subtitles for videos that don't have sub streams
-	- Use OCR for non-text based subtitles
-	- Make a cool logo?
-	- Learn how to package python programs as binaries to make releases
-	- Remove the copyrighted content from this repo (sorry no sorry TV Tokyo)
-	- Save and import config files for later
+- GUI tab to list and select audio / subtitle streams w/ FFMPEG
+- ~~Move the tabs into their own classes~~
+- Add labels and screen reader landmarks to all the controls
+- Single speaker or multispeaker control switch
+- Download YouTube video with Closed Captions
+- GUI to select start and end time for dubbing
+- Use OCR to generate subtitles for videos that don't have sub streams
+- Use OCR for non-text based subtitles
+- Make a cool logo?
+- Learn how to package python programs as binaries to make releases
+- Remove the copyrighted content from this repo (sorry not sorry TV Tokyo)
+- Save and import config files for later
 ### Diarization
-	- Select from multiple diarization models / pipelines
-	- Optimize audio trakcs for diarizaiton by isolating lines speech based on subtitle timings
-	- Investigate Diart?
-	- For multi-langual media, compare diary with subtitles to find non-english components of a video
+- Select from multiple diarization models / pipelines
+- Optimize audio trakcs for diarizaiton by isolating lines speech based on subtitle timings
+- Investigate Diart?
+- For multi-langual media, compare diary with subtitles to find non-english components of a video
 ### TTS
-	- Rework the speed control to use PyDub to speed up audio.
-	- match the volume of the speaker to TTS
-	- investigate voice conversion?
-	- Rename "SAPI5" to PyTTSx3 and add better support for SAPI5 and OneCore voices
-	- Build an asynchronous queue of operations to perform
-	- Asynchronous GUI for Coqui model downloads
-	- Add support for MyCroft Mimic 3
-	- Add Support for PiperTTS
+- Rework the speed control to use PyDub to speed up audio.
+- match the volume of the speaker to TTS
+- investigate voice conversion?
+- Rename "SAPI5" to PyTTSx3 and add better support for SAPI5 and OneCore voices
+- Build an asynchronous queue of operations to perform
+- Started - Asynchronous GUI for Coqui model downloads
+- Add support for MyCroft Mimic 3
+- Add Support for PiperTTS
 ### Cloning
-	- Use diaries and subtitles to isolate and build training datasets
-	- Build a tool to streamline the manual creation of datasets
+- Use diaries and subtitles to isolate and build training datasets
+- Build a tool to streamline the manual creation of datasets
 
 ###### (oh god that's literally so many things, the scope of this has gotten so big how will this ever become a thing)

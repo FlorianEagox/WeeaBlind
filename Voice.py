@@ -72,7 +72,12 @@ class CoquiVoice(Voice):
 		self.speaker = None
 	
 	def speak(self, text, file_path):
-		self.voice.tts_to_file(text, file_path=file_path, speaker=self.speaker)
+		self.voice.tts_to_file(
+			text,
+			file_path=file_path,
+			speaker=self.speaker,
+			language= 'en' if self.voice.is_multi_lingual else None
+		)
 
 	def set_speed(self, speed):
 		self.speed = speed

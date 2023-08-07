@@ -8,7 +8,6 @@ import numpy as np
 import re
 import Voice
 # # from pydub import AudioSegment
-from mimic3_tts import tts as m3
 
 # READ SUBS
 def get_subs(file):
@@ -40,7 +39,7 @@ speech_diary = read_diary("audio.rttm")
 
 start_time = 94
 end_time =  124 #1324
-CLEANR = re.compile('<.*?>')
+remove_xml = re.compile('<.*?>')
 
 start_line = find_nearest([sub.start.total_seconds() for sub in subs], start_time)
 end_line = find_nearest([sub.start.total_seconds() for sub in subs], end_time)
@@ -68,12 +67,12 @@ total_duration = (end_time - start_time)*1000
 
 subs_adjusted = subs[start_line:end_line]
 for sub in subs_adjusted:
-	sub.content = re.sub(CLEANR, '', sub.content)
+	sub.content = re.sub(remove_xml, '', sub.content)
 
 # # Synth
 def synth():
 	for sub in subs_adjusted:
-		text = re.sub(CLEANR, '', sub.content)
+		text = re.sub(remove_xml, '', sub.content)
 		# 🤔 How the FRICK does this line work? 🤔
 		current_speaker = int(speech_diary_adjusted[find_nearest([line[1] for line in speech_diary_adjusted], sub.start.total_seconds())][0].split('_')[1])
 		current_speaker.set_speed(60*int((len(text.split(' ')) / (sub.end.total_seconds() - sub.start.total_seconds()))))
@@ -82,17 +81,3 @@ def synth():
 		print(text)
 		empty_audio = empty_audio.overlay(AudioSegment.from_file(file_name), position=sub.start.total_seconds()*1000)
 	empty_audio.export("new.wav")
-
-# synth()
-# # print('\n\nSPEAKERS\n', tts.speakers)
-
-# # LIST ALL COQUI Models	
-# for (index, model) in enumerate(TTS.list_models()):
-	# if '/en/' in model: print(index, model)
-	# print(index, model)
-
-# tts = TTS()
-
-# tts.load_tts_model_by_name('tts_models/en/vctk/vits')
-# for speaker in tts.speakers:
-# 	tts.tts_to_file("flipping heck guys I need to awoo", speaker=speaker, file_path=f"output/{speaker}.wav", gpu=True)

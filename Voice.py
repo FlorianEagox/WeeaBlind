@@ -1,5 +1,6 @@
 from enum import Enum, auto
 import abc
+import os
 from TTS.api import TTS
 import pyttsx3
 from espeakng import ESpeakNG
@@ -24,6 +25,7 @@ class Voice(abc.ABC):
 	def __init__(self, voice_type, init_args=[], name="Unnamed"):
 		self.voice_type = voice_type
 		self.name = name
+		self.voice_option = None
 
 	@abc.abstractmethod
 	def speak(self, text, file_name):
@@ -68,6 +70,7 @@ class CoquiVoice(Voice):
 		self.voice = TTS()
 		self.is_multispeaker = False
 		self.speaker = None
+	
 	def speak(self, text, file_path):
 		self.voice.tts_to_file(text, file_path=file_path, speaker=self.speaker)
 
@@ -83,6 +86,9 @@ class CoquiVoice(Voice):
 
 	def list_voice_options(self):	
 		return [item for item in TTS.list_models() if '/en/' in item or 'multi' in item]
+
+	def is_model_downloaded(self, model_name):
+		return os.path.exists(os.path.join(self.voice.manager.output_prefix, self.voice.manager._set_model_item(model_name)[1]))
 
 	def list_speakers(self):
 		return self.voice.speakers if self.voice.is_multi_speaker else []

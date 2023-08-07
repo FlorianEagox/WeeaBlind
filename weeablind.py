@@ -87,31 +87,47 @@ class ConfigureVoiceTab(wx.Panel):
 		if sampleSpeaker.voice_type == Voice.VoiceType.COQUI and sampleSpeaker.is_multispeaker:
 			self.cb_speaker_voices.Show()
 			self.cb_speaker_voices.Set(sampleSpeaker.list_speakers())
-			self.cb_speaker_voices.SetValue(sampleSpeaker.speaker)
+			if sampleSpeaker.speaker:
+				self.cb_speaker_voices.SetValue(sampleSpeaker.speaker)
 		else:
 			self.cb_speaker_voices.Hide()
-		panel.Layout()
+		self.Layout()
 
 	def update_voice_fields(self, event):
-		self.txt_voice_name.Value = currentSpeaker.name
+		self.txt_voice_name.Value = sampleSpeaker.name
 		self.cb_voice_types.Select(list(Voice.VoiceType.__members__.values()).index(sampleSpeaker.voice_type))
 		self.cb_voice_options.Set(sampleSpeaker.list_voice_options())
-		self.cb_voice_options.Select(sampleSpeaker.list_voice_options().index(currentSpeaker.voice_option))
+		self.cb_voice_options.Select(sampleSpeaker.list_voice_options().index(sampleSpeaker.voice_option))
 		self.show_multispeaker()
 
 	def change_voice_type(self, event):
 		global sampleSpeaker
-		sampleSpeaker = Voice(list(Voice.VoiceType.__members__.values())[cb_voice_types.GetSelection()])
+		sampleSpeaker = Voice(list(Voice.VoiceType.__members__.values())[self.cb_voice_types.GetSelection()])
 		self.update_voice_fields(event)
 
 	def change_voice_params(self, event):
-		sampleSpeaker.set_voice_params(self.cb_voice_options.GetStringSelection())
+		self.SetCursor(wx.Cursor(wx.CURSOR_WAIT))
+		self.Layout()
+		option_name = self.cb_voice_options.GetStringSelection()
+		if sampleSpeaker.voice_type == Voice.VoiceType.COQUI:
+			if not sampleSpeaker.is_model_downloaded(option_name):
+				message_download = wx.MessageDialog(
+					None,
+					f"You do not have\n{option_name}\n downloaded. Would you like to download it? It could take a long time and lots of storage",
+					"Downlaod this model?",
+					wx.CANCEL
+				).ShowModal()
+				if(message_download != wx.ID_OK):
+					return
+		
+		sampleSpeaker.set_voice_params(voice=option_name)
+
 		if sampleSpeaker.voice_type == Voice.VoiceType.COQUI and sampleSpeaker.is_multispeaker:
 			sampleSpeaker.set_voice_params(speaker=self.cb_speaker_voices.GetStringSelection())
 		else:
 			sampleSpeaker.set_voice_params(speaker=None)
 		self.show_multispeaker()
-
+		self.SetCursor(wx.Cursor(wx.CURSOR_DEFAULT))
 class DiarizationEntry(wx.Panel):
 	def __init__(self, parent, start_time, end_time, speaker, text):
 		super().__init__(parent)

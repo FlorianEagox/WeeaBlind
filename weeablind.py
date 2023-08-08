@@ -66,7 +66,6 @@ class GUI(wx.Panel):
 		synth.sampleSpeaker = synth.currentSpeaker
 		self.tab_voice_config.update_voice_fields(event)
 
-
 gui = GUI(frame)
 frame.Show()
 app.MainLoop()

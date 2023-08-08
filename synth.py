@@ -7,7 +7,11 @@ from TTS.api import TTS
 import numpy as np
 import re
 import Voice
-# # from pydub import AudioSegment
+from pydub.playback import play
+from pydub import AudioSegment
+from pydub.effects import speedup
+from audiotsm import phasevocoder, wsola
+from audiotsm.io.wav import WavReader, WavWriter
 
 # READ SUBS
 def get_subs(file):
@@ -55,8 +59,8 @@ def initialize_speakers(speaker_count):
 		speakers.append(Voice.SAPI5Voice([], f"Voice {i}"))
 	return speakers
 speakers = initialize_speakers(total_speakers)
-# speakers[0] = Voice.Voice(Voice.Voice.VoiceType.COQUI)
-# speakers[0].set_voice_params('tts_models/en/vctk/vits', 'p326')
+speakers[0] = Voice.Voice(Voice.Voice.VoiceType.COQUI)
+speakers[0].set_voice_params('tts_models/en/vctk/vits', 'p326')
 # speakers[1] = Voice.CoquiVoice(Voice.Voice.VoiceType.COQUI)
 # speakers[1].set_voice_params('tts_models/en/vctk/vits', 'p340')
 
@@ -85,4 +89,26 @@ def synth():
 currentSpeaker = speakers[0]
 sampleSpeaker = currentSpeaker
 
-print(ffmpeg.probe("saiki.mkv"))
+default_sample_path = "./output/sample.wav"
+
+def sampleVoice(text, output=default_sample_path):
+	play(AudioSegment.from_file(sampleSpeaker.speak(text, output)))
+
+def adjust_fit_rate(target_path, source_duration, destination_path=None):
+	if destination_path == None:
+		destination_path = target_path.split('.')[0] + '-timeshift.wav'
+	duration = float(ffmpeg.probe(target_path)["format"]["duration"])
+	sound = AudioSegment.from_wav(target_path)
+	rate = duration*1/source_duration
+	with WavReader(target_path) as reader:
+		with WavWriter(destination_path, reader.channels, reader.samplerate) as writer:
+			tsm = wsola(reader.channels, speed=rate)
+			tsm.run(reader, writer)
+	# speedup(sound, rate, 30, 50).export(destination_path, format="wav")
+	# ffmpeg.input(target_path).filter('atempo', rate).output(destination_path).run(overwrite_output=True)
+	return destination_path
+# speakers[0].calibrate_rate()
+
+adjust_fit_rate("output/calibration.wav", 45, "bingus.wav")
+
+# print(ffmpeg.probe("saiki.mkv"))

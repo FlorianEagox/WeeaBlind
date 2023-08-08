@@ -33,7 +33,7 @@ This is mega-WIP, not even MVP, so idk. Email me or make an issue if you want to
 - Investigate Diart?
 - For multi-langual media, compare diary with subtitles to find non-english components of a video
 ### TTS
-- Rework the speed control to use PyDub to speed up audio.
+- ~~Rework the speed control to use PyDub to speed up audio.~~
 - match the volume of the speaker to TTS
 - investigate voice conversion?
 - Rename "SAPI5" to PyTTSx3 and add better support for SAPI5 and OneCore voices

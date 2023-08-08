@@ -1,6 +1,4 @@
 import synth
-from pydub.playback import play
-from pydub import AudioSegment
 import wx
 from Voice import Voice
 
@@ -43,9 +41,7 @@ class ConfigureVoiceTab(wx.Panel):
 
 
 	def sample(self, event):
-		output = "output/sample.wav"
-		synth.sampleSpeaker.speak(self.txt_sample_synth.Value, output)
-		play(AudioSegment.from_file(output))
+		synth.sampleVoice(self.txt_sample_synth.Value)
 
 	def update_voice(self, event):
 		synth.sampleSpeaker.name = self.txt_voice_name.Value

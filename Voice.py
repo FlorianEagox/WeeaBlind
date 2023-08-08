@@ -4,6 +4,8 @@ import os
 from TTS.api import TTS
 import pyttsx3
 from espeakng import ESpeakNG
+from pydub import AudioSegment
+import ffmpeg
 
 class Voice(abc.ABC):
 	class VoiceType(Enum):
@@ -31,7 +33,6 @@ class Voice(abc.ABC):
 	def speak(self, text, file_name):
 		pass
 
-	@abc.abstractmethod
 	def set_speed(self, speed):
 		pass
 
@@ -42,6 +43,16 @@ class Voice(abc.ABC):
 	@abc.abstractmethod
 	def list_voice_options(self):
 		pass
+
+	def calibrate_rate(self):
+		output_path = './output/calibration.wav'
+		calibration_phrase_long = "In the early morning light, a vibrant scene unfolds as the quick brown fox jumps gracefully over the lazy dog. The fox's russet fur glistens in the sun, and its swift movements captivate onlookers. With a leap of agility, it soars through the air, showcasing its remarkable prowess. Meanwhile, the dog, relaxed and unperturbed, watches with half-closed eyes, acknowledging the fox's spirited display. The surrounding nature seems to hold its breath, enchanted by this charming spectacle. The gentle rustling of leaves and the distant chirping of birds provide a soothing soundtrack to this magical moment. The two animals, one lively and the other laid-back, showcase the beautiful harmony of nature, an ageless dance that continues to mesmerize all who witness it."
+		calibration_phrase_chair = "A chair is a piece of furniture with a raised surface used to sit on, commonly for use by one person. Chairs are most often supported by four legs and have a back; however, a chair can have three legs or could have a different shape. A chair without a back or arm rests is a stool, or when raised up, a bar stool."
+		calibration_phrase = "Hello? Testing, testing. Is.. is this thing on? Ah! Hello Gordon! I'm... assuming that's your real name... You wouldn't lie to us. Would you? Well... You finally did it! You survived the resonance cascade! You brought us all to hell and back, alive! You made it to the ultimate birthday bash at the end of the world! You beat the video game! And... now I imagine you'll... shut it down. Move on with your life. Onwards and upwards, ay Gordon? I don't.. know... how much longer I have to send this to you so I'll try to keep it brief. Not my specialty. Perhaps this is presumptuous of me but... Must this really be the end of our time together? Perhaps you could take the science team's data, transfer us somewhere else, hmm? Now... it doesn't have to be Super Punch-Out for the Super Nintendo Entertainment System. Maybe a USB drive, or a spare floppy disk. You could take us with you! We could see the world! We could... I'm getting a little ahead of myself, surely. Welp! The option's always there! You changed our lives, Gordon. I'd like to think it was for the better. And I don't know what's going to happen to us once you exit the game for good. But I know we'll never forget you. I hope you won't forget us. Well... This is where I get off. Goodbye Gordon!"
+		self.speak(calibration_phrase, output_path)
+
+	def get_wpm(words, duration):
+		return (len(words.split(' ')) / duration * 60)
 
 class ESpeakVoice(Voice):
 	def __init__(self, init_args=[], name="Unnamed"):
@@ -72,15 +83,19 @@ class CoquiVoice(Voice):
 		self.speaker = None
 	
 	def speak(self, text, file_path):
-		self.voice.tts_to_file(
-			text,
-			file_path=file_path,
-			speaker=self.speaker,
-			language= 'en' if self.voice.is_multi_lingual else None
-		)
-
-	def set_speed(self, speed):
-		self.speed = speed
+		if file_path:
+			return self.voice.tts_to_file(
+				text,
+				file_path=file_path,
+				speaker=self.speaker,
+				language= 'en' if self.voice.is_multi_lingual else None
+			)
+		else:
+			return self.voice.tts(
+				text,
+				speaker=self.speaker,
+				language= 'en' if self.voice.is_multi_lingual else None
+			)
 
 	def set_voice_params(self, voice=None, speaker=None):
 		if voice:
@@ -107,6 +122,7 @@ class SAPI5Voice(Voice):
 	def speak(self, text, file_name):
 		self.voice.save_to_file(text, file_name)
 		self.voice.runAndWait()
+		return file_name
 
 	def set_speed(self, speed):
 		self.voice.setProperty('rate', speed)

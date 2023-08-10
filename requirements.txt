@@ -1,12 +1,11 @@
 tts
 pyannote.audio
-python-ffmpeg
+ffmpeg-python
 srt
 ass
 py-espeak-ng
 pydub
 wxpython
 pyttsx3
-ffmpeg-python
 yt-dlp
 audiotsm

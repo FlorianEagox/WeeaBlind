@@ -1,15 +1,18 @@
 import synth
 from pydub.playback import play
 from pydub import AudioSegment
+from pydub import AudioSegment
 import synth
 import wx
 
 class DiarizationEntry(wx.Panel):
-	def __init__(self, parent, start_time, end_time, speaker, text):
+	def __init__(self, parent, start_time, end_time, speaker, duration, text, context):
 		super().__init__(parent)
 		self.text = text
 		self.start_time = start_time
 		self.end_time = end_time
+		self.duration = duration
+		self.context = context
 		entry_box = wx.StaticBox(self, label=f"{start_time:.2f} - {end_time:.2f}")
 		entry_sizer = wx.StaticBoxSizer(entry_box, wx.VERTICAL)
 
@@ -27,18 +30,20 @@ class DiarizationEntry(wx.Panel):
 		self.SetSizerAndFit(entry_sizer)
 
 	def on_playback_button_click(self, event):
-		play(synth.get_snippet(self.start_time, self.start_time+self.end_time))
+		play(synth.get_snippet(self.start_time, self.end_time))
 		pass
 
 	def on_sample_button_click(self, event):
-		adjustment = synth.adjust_fit_rate(synth.currentSpeaker.speak(self.text, 'output/sample.wav'), self.end_time)
+		adjustment = synth.adjust_fit_rate(synth.currentSpeaker.speak(self.text, 'output/sample.wav'), self.duration)
+		if self.context.check_match_volume:
+			adjustment = synth.match_volume(synth.get_snippet(self.start_time, self.end_time), adjustment, adjustment)
 		play(AudioSegment.from_file(adjustment))
 		pass
 
 class DiarizationTab(wx.Panel):
-	def __init__(self, notebook, parent):
+	def __init__(self, notebook, context):
 		super().__init__(notebook)
-		self.parent = parent
+		self.context = context
 		self.scroll_panel = wx.ScrolledWindow(self, style=wx.VSCROLL)
 		self.scroll_sizer = wx.BoxSizer(wx.VERTICAL)
 		self.scroll_panel.SetSizer(self.scroll_sizer)
@@ -63,8 +68,10 @@ class DiarizationTab(wx.Panel):
 			# )
 			diarization_entry = DiarizationEntry(
 				self.scroll_panel,
+				context=self.context,
 				start_time=entry.start.total_seconds(),
-				end_time=entry.end.total_seconds() - entry.start.total_seconds(),
+				end_time=entry.end.total_seconds(),
+				duration=entry.end.total_seconds()-entry.start.total_seconds(),
 				speaker=0,
 				text=entry.content # synth.subs_adjusted[synth.find_nearest([sub.start.total_seconds() for sub in synth.subs_adjusted], entry[1])].content
 			)

@@ -24,6 +24,9 @@ class GUI(wx.Panel):
 		lbl_GPU = wx.StaticText(self, label=f"GPU Detected? {is_available()}")
 		lbl_GPU.SetForegroundColour((0, 255, 0) if is_available() else (255, 0, 0))
 
+		self.check_match_volume = wx.CheckBox(self, label="Match Speaker Volume")
+		self.check_match_volume.SetValue(True)
+
 		# SHOW A LIST OF VOICES
 		self.lb_voices = wx.ListBox(self, choices=[speaker.name for speaker in synth.speakers])
 		self.lb_voices.Bind(wx.EVT_LISTBOX, self.on_voice_change)
@@ -42,6 +45,7 @@ class GUI(wx.Panel):
 		sizer.Add(lbl_GPU, 0, wx.ALL|wx.CENTER, 5)
 		sizer.Add(self.txt_main_file, 0, wx.ALL|wx.EXPAND, 5)
 		sizer.Add(btn_choose_file, 0, wx.ALL|wx.ALIGN_RIGHT, 5)
+		sizer.Add(self.check_match_volume, 0, wx.ALL|wx.ALIGN_LEFT, 5)
 		sizer.Add(self.lb_voices, 0, wx.ALL|wx.ALIGN_LEFT, 5)
 		sizer.Add(tab_control, 1, wx.EXPAND, 5)
 

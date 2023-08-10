@@ -62,8 +62,8 @@ def initialize_speakers(speaker_count):
 		speakers.append(Voice.SAPI5Voice([], f"Voice {i}"))
 	return speakers
 speakers = initialize_speakers(total_speakers)
-# speakers[0] = Voice.Voice(Voice.Voice.VoiceType.COQUI)
-# speakers[0].set_voice_params('tts_models/en/vctk/vits', 'p326')
+speakers[0] = Voice.Voice(Voice.Voice.VoiceType.COQUI)
+speakers[0].set_voice_params('tts_models/en/vctk/vits', 'p326')
 # speakers[1] = Voice.CoquiVoice(Voice.Voice.VoiceType.COQUI)
 # speakers[1].set_voice_params('tts_models/en/vctk/vits', 'p340')
 
@@ -116,5 +116,18 @@ def Download(link):
 
 def get_snippet(start, end):
 	return current_audio[start*1000:end*1000]
+
+def match_volume(source_snippet, target_path, output_path=None):
+	if output_path == None:
+		output_path = target_path
+	target = AudioSegment.from_file(target_path)
+	ratio = source_snippet.rms / target.rms
+	# ratio = source_snippet.dBFS - target.dBFS
+	adjusted_audio = target.apply_gain(ratio)
+	# adjusted_audio = target + raio
+	print(ratio)
+	adjusted_audio.export(output_path, format="wav")
+	return output_path
+
 
 # Download("https://www.youtube.com/watch?v=VOjAlLoXOhQ")

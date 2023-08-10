@@ -8,7 +8,8 @@ class DiarizationEntry(wx.Panel):
 	def __init__(self, parent, start_time, end_time, speaker, text):
 		super().__init__(parent)
 		self.text = text
-		self.duration = end_time
+		self.start_time = start_time
+		self.end_time = end_time
 		entry_box = wx.StaticBox(self, label=f"{start_time:.2f} - {end_time:.2f}")
 		entry_sizer = wx.StaticBoxSizer(entry_box, wx.VERTICAL)
 
@@ -26,11 +27,11 @@ class DiarizationEntry(wx.Panel):
 		self.SetSizerAndFit(entry_sizer)
 
 	def on_playback_button_click(self, event):
-		# Implement playback functionality here
+		play(synth.get_snippet(self.start_time, self.start_time+self.end_time))
 		pass
 
 	def on_sample_button_click(self, event):
-		adjustment = synth.adjust_fit_rate(synth.currentSpeaker.speak(self.text, 'output/sample.wav'), self.duration)
+		adjustment = synth.adjust_fit_rate(synth.currentSpeaker.speak(self.text, 'output/sample.wav'), self.end_time)
 		play(AudioSegment.from_file(adjustment))
 		pass
 

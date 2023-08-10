@@ -7,3 +7,6 @@ py-espeak-ng
 pydub
 wxpython
 pyttsx3
+ffmpeg-python
+yt-dlp
+audiotsm

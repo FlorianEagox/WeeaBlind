@@ -12,6 +12,9 @@ from pydub import AudioSegment
 from pydub.effects import speedup
 from audiotsm import phasevocoder, wsola
 from audiotsm.io.wav import WavReader, WavWriter
+from yt_dlp import YoutubeDL
+
+test_video_name = "saiki.mkv"
 
 # READ SUBS
 def get_subs(file):
@@ -38,7 +41,7 @@ def read_diary(file):
 def find_nearest(array, value):
 	return (np.abs(np.asarray(array) - value)).argmin()
 
-subs = get_subs("saiki.mkv")
+subs = get_subs(test_video_name)
 speech_diary = read_diary("audio.rttm")
 
 start_time = 94
@@ -59,15 +62,15 @@ def initialize_speakers(speaker_count):
 		speakers.append(Voice.SAPI5Voice([], f"Voice {i}"))
 	return speakers
 speakers = initialize_speakers(total_speakers)
-speakers[0] = Voice.Voice(Voice.Voice.VoiceType.COQUI)
-speakers[0].set_voice_params('tts_models/en/vctk/vits', 'p326')
+# speakers[0] = Voice.Voice(Voice.Voice.VoiceType.COQUI)
+# speakers[0].set_voice_params('tts_models/en/vctk/vits', 'p326')
 # speakers[1] = Voice.CoquiVoice(Voice.Voice.VoiceType.COQUI)
 # speakers[1].set_voice_params('tts_models/en/vctk/vits', 'p340')
 
 
 total_duration = (end_time - start_time)*1000
 # # empty_audio = AudioSegment.silent(duration=total_duration)
-# # empty_audio = AudioSegment.from_file('saiki.mkv')
+current_audio = AudioSegment.from_file(test_video_name)
 
 subs_adjusted = subs[start_line:end_line]
 for sub in subs_adjusted:
@@ -107,8 +110,11 @@ def adjust_fit_rate(target_path, source_duration, destination_path=None):
 	# speedup(sound, rate, 30, 50).export(destination_path, format="wav")
 	# ffmpeg.input(target_path).filter('atempo', rate).output(destination_path).run(overwrite_output=True)
 	return destination_path
-# speakers[0].calibrate_rate()
 
-adjust_fit_rate("output/calibration.wav", 45, "bingus.wav")
+def Download(link):
+	YoutubeDL().download(link)
 
-# print(ffmpeg.probe("saiki.mkv"))
+def get_snippet(start, end):
+	return current_audio[start*1000:end*1000]
+
+# Download("https://www.youtube.com/watch?v=VOjAlLoXOhQ")

@@ -18,7 +18,7 @@ class GUI(wx.Panel):
 		btn_choose_file = wx.Button(self, label="Choose FIle")
 		btn_choose_file.Bind(wx.EVT_BUTTON, self.open_file)
 
-		self.txt_main_file = wx.TextCtrl(self, wx.TC_LEFT, "saiki.mkv")
+		self.txt_main_file = wx.TextCtrl(self, wx.TC_LEFT, synth.test_video_name)
 		lbl_title = wx.StaticText(self, label="WeeaBlind")
 
 		lbl_GPU = wx.StaticText(self, label=f"GPU Detected? {is_available()}")

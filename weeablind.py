@@ -26,6 +26,11 @@ class GUI(wx.Panel):
 
 		self.check_match_volume = wx.CheckBox(self, label="Match Speaker Volume")
 		self.check_match_volume.SetValue(True)
+		
+		self.txt_start = wx.TextCtrl(self, value="00:00")
+		self.txt_end = wx.TextCtrl(self, value="00:00")
+		self.txt_start.Bind(wx.EVT_TEXT, self.change_crop_time)
+		self.txt_end.Bind(wx.EVT_TEXT, self.change_crop_time)
 
 		# SHOW A LIST OF VOICES
 		self.lb_voices = wx.ListBox(self, choices=[speaker.name for speaker in synth.speakers])
@@ -45,6 +50,8 @@ class GUI(wx.Panel):
 		sizer.Add(lbl_GPU, 0, wx.ALL|wx.CENTER, 5)
 		sizer.Add(self.txt_main_file, 0, wx.ALL|wx.EXPAND, 5)
 		sizer.Add(btn_choose_file, 0, wx.ALL|wx.ALIGN_RIGHT, 5)
+		sizer.Add(self.txt_start, 0, wx.ALL, 5)
+		sizer.Add(self.txt_end, 0, wx.ALL, 5)
 		sizer.Add(self.check_match_volume, 0, wx.ALL|wx.ALIGN_LEFT, 5)
 		sizer.Add(self.lb_voices, 0, wx.ALL|wx.ALIGN_LEFT, 5)
 		sizer.Add(tab_control, 1, wx.EXPAND, 5)
@@ -58,8 +65,20 @@ class GUI(wx.Panel):
 				style=wx.FD_OPEN | wx.FD_CHANGE_DIR
 			)
 			if dlg.ShowModal() == wx.ID_OK:
-				self.txt_main_file.Value = dlg.GetPath()
+				self.load_video(dlg.GetPath())
 			dlg.Destroy()
+
+	def load_video(self, video_path):
+		self.txt_main_file.Value = video_path
+		synth.load_video(video_path)
+		self.txt_start.SetValue(synth.seconds_to_timecode(synth.start_time))
+		self.txt_end.SetValue(synth.seconds_to_timecode(synth.end_time))
+
+	def change_crop_time(self, event):
+		synth.time_change(
+			synth.timecode_to_seconds(self.txt_start.Value),
+			synth.timecode_to_seconds(self.txt_end.Value)
+		)
 
 	def update_voices_list(self):
 		self.lb_voices.Set([speaker.name for speaker in synth.speakers])

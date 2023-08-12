@@ -11,6 +11,7 @@ class DiarizationEntry(wx.Panel):
 		self.text = text
 		self.start_time = start_time
 		self.end_time = end_time
+		self.speaker = speaker
 		self.duration = duration
 		self.context = context
 		entry_box = wx.StaticBox(self, label=f"{synth.seconds_to_timecode(start_time)} - {synth.seconds_to_timecode(end_time)}")
@@ -34,7 +35,7 @@ class DiarizationEntry(wx.Panel):
 		pass
 
 	def on_sample_button_click(self, event):
-		adjustment = synth.adjust_fit_rate(synth.currentSpeaker.speak(self.text, 'output/sample.wav'), self.duration)
+		adjustment = synth.adjust_fit_rate(synth.speakers[self.speaker].speak(self.text, 'output/sample.wav'), self.duration)
 		if self.context.check_match_volume:
 			adjustment = synth.match_volume(synth.get_snippet(self.start_time, self.end_time), adjustment, adjustment)
 		play(AudioSegment.from_file(adjustment))
@@ -44,17 +45,25 @@ class DiarizationTab(wx.Panel):
 	def __init__(self, notebook, context):
 		super().__init__(notebook)
 		self.context = context
+		btn_run_diarize = wx.Button(self, label="Run Diarization")
+		btn_run_diarize.Bind(wx.EVT_BUTTON, self.run_diarization)
 		self.scroll_panel = wx.ScrolledWindow(self, style=wx.VSCROLL)
 		self.scroll_sizer = wx.BoxSizer(wx.VERTICAL)
 		self.scroll_panel.SetSizer(self.scroll_sizer)
-		self.scroll_panel.SetScrollRate(0, 20)  # Add scroll rate (pixels per scroll step)
+		self.scroll_panel.SetScrollRate(0, 20)
 
 		self.create_entries()
 
 		main_sizer = wx.BoxSizer(wx.VERTICAL)
+		main_sizer.Add(btn_run_diarize, 0, wx.CENTER)
 		main_sizer.Add(self.scroll_panel, 1, wx.EXPAND | wx.ALL, border=10)
 
 		self.SetSizerAndFit(main_sizer)
+
+	def run_diarization(self, event):
+		synth.run_diarization()
+		self.create_entries()
+		self.context.update_voices_list()
 
 	def create_entries(self):
 		self.scroll_sizer.Clear(delete_windows=True)
@@ -73,7 +82,7 @@ class DiarizationTab(wx.Panel):
 				start_time=entry.start.total_seconds(),
 				end_time=entry.end.total_seconds(),
 				duration=entry.end.total_seconds()-entry.start.total_seconds(),
-				speaker=0,
+				speaker=synth.speech_diary_adjusted[synth.find_nearest([diary_entry[1] for diary_entry in synth.speech_diary_adjusted], entry.start.total_seconds())][0],
 				text=entry.content # synth.subs_adjusted[synth.find_nearest([sub.start.total_seconds() for sub in synth.subs_adjusted], entry[1])].content
 			)
 			self.scroll_sizer.Add(diarization_entry, 0, wx.EXPAND | wx.ALL, border=5)

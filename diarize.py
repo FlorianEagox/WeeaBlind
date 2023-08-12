@@ -13,7 +13,7 @@ import ffmpeg
 # ffmpeg.run(out)
 
 
-pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization@2.1",
+# pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization@2.1",
 									use_auth_token="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")
 
 # # apply the pipeline to an audio file

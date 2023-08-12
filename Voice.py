@@ -76,17 +76,19 @@ class ESpeakVoice(Voice):
 		pass
 
 class CoquiVoice(Voice):
-	def __init__(self, init_args=None, name="Unnamed"):
+	def __init__(self, init_args=None, name="Coqui Voice"):
 		super().__init__(Voice.VoiceType.COQUI, init_args, name)
-		self.voice = TTS()
+		self.GPU = True
+		self.voice = TTS(gpu=self.GPU)
 		self.is_multispeaker = False
 		self.speaker = None
-	
+
 	def speak(self, text, file_path):
 		if file_path:
 			return self.voice.tts_to_file(
 				text,
 				file_path=file_path,
+				
 				speaker=self.speaker,
 				language= 'en' if self.voice.is_multi_lingual else None
 			)

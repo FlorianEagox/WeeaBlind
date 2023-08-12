@@ -27,10 +27,10 @@ class GUI(wx.Panel):
 		self.check_match_volume = wx.CheckBox(self, label="Match Speaker Volume")
 		self.check_match_volume.SetValue(True)
 		
-		self.txt_start = wx.TextCtrl(self, value="00:00")
-		self.txt_end = wx.TextCtrl(self, value="00:00")
-		self.txt_start.Bind(wx.EVT_TEXT, self.change_crop_time)
-		self.txt_end.Bind(wx.EVT_TEXT, self.change_crop_time)
+		self.txt_start = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER, value="00:00")
+		self.txt_end   = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER, value="00:00")
+		self.txt_start.Bind(wx.EVT_TEXT_ENTER, self.change_crop_time)
+		self.txt_end  .Bind(wx.EVT_TEXT_ENTER, self.change_crop_time)
 
 		# SHOW A LIST OF VOICES
 		self.lb_voices = wx.ListBox(self, choices=[speaker.name for speaker in synth.speakers])
@@ -40,8 +40,8 @@ class GUI(wx.Panel):
 		tab_control = wx.Notebook(self)
 		self.tab_voice_config = ConfigureVoiceTab(tab_control, self)
 		tab_control.AddPage(self.tab_voice_config, "Configure Voices")
-		tab_diarization = DiarizationTab(tab_control, self)
-		tab_control.AddPage(tab_diarization, "Diarization")
+		self.tab_diarization = DiarizationTab(tab_control, self)
+		tab_control.AddPage(self.tab_diarization, "Diarization")
 
 		self.on_voice_change(None)
 
@@ -73,12 +73,14 @@ class GUI(wx.Panel):
 		synth.load_video(video_path)
 		self.txt_start.SetValue(synth.seconds_to_timecode(synth.start_time))
 		self.txt_end.SetValue(synth.seconds_to_timecode(synth.end_time))
+		self.tab_diarization.create_entries()
 
 	def change_crop_time(self, event):
 		synth.time_change(
 			synth.timecode_to_seconds(self.txt_start.Value),
 			synth.timecode_to_seconds(self.txt_end.Value)
 		)
+		self.tab_diarization.create_entries()
 
 	def update_voices_list(self):
 		self.lb_voices.Set([speaker.name for speaker in synth.speakers])

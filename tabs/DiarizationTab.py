@@ -13,7 +13,7 @@ class DiarizationEntry(wx.Panel):
 		self.end_time = end_time
 		self.duration = duration
 		self.context = context
-		entry_box = wx.StaticBox(self, label=f"{start_time:.2f} - {end_time:.2f}")
+		entry_box = wx.StaticBox(self, label=f"{synth.seconds_to_timecode(start_time)} - {synth.seconds_to_timecode(end_time)}")
 		entry_sizer = wx.StaticBoxSizer(entry_box, wx.VERTICAL)
 
 		text_label = wx.StaticText(self, label=f"Speaker: {speaker}\nText: {text}")
@@ -57,6 +57,7 @@ class DiarizationTab(wx.Panel):
 		self.SetSizerAndFit(main_sizer)
 
 	def create_entries(self):
+		self.scroll_sizer.Clear(delete_windows=True)
 		rttm_data = synth.subs_adjusted
 		for entry in rttm_data:
 			# diarization_entry = DiarizationEntry(
@@ -77,4 +78,4 @@ class DiarizationTab(wx.Panel):
 			)
 			self.scroll_sizer.Add(diarization_entry, 0, wx.EXPAND | wx.ALL, border=5)
 
-		self.scroll_sizer.Layout()
+		self.Layout()

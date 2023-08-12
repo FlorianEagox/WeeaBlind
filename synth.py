@@ -16,7 +16,7 @@ test_video_name = "saiki.mkv"
 default_sample_path = "./output/sample.wav"
 start_time = 94
 end_time =  1324 #1324
-remove_xml = re.compile('<.*?>')
+remove_xml = re.compile(r'<[^>]+>|\{[^}]+\}')
 subs = subs_adjusted = speech_diary = speech_diary_adjusted = []
 
 def load_subs(file):
@@ -25,11 +25,12 @@ def load_subs(file):
 		ffmpeg
 		.input(file)
 		.output(output)
+		.global_args('-loglevel', 'error')
 		.run(overwrite_output=True)
 	)
 	with open(output, "r") as f:
 		subs = list(srt.parse(f.read()))
-		for sub in subs_adjusted:
+		for sub in subs:
 			sub.content = re.sub(remove_xml, '', sub.content)
 		return subs
 
@@ -119,8 +120,8 @@ def seconds_to_timecode(seconds):
 	if hours:
 		timecode += f"{hours}:"
 	if minutes:
-		timecode += f"{minutes}:"
-	timecode = f"{timecode}{seconds:02f}"
+		timecode += f"{minutes}:" 
+	timecode = f"{timecode}{seconds:.2f}"
 	return timecode
 
 def list_streams():
@@ -128,13 +129,14 @@ def list_streams():
 
 # This is like REALLY STINKY and DESPERATELY needs to be refactored... but i don't wanna right now
 def load_video(video_path=test_video_name):
-	global subs, speech_diary_adjusted
+	global subs, current_audio
 	subs = load_subs(video_path)
 	current_audio = AudioSegment.from_file(video_path)
 	time_change(0, float(ffmpeg.probe(video_path)["format"]["duration"]))
 
 def time_change(start, end):
-	global speech_diary_adjusted, start_time, end_time
+	global speech_diary_adjusted, start_time, end_time, subs_adjusted
+	print(start, end)
 	start_time = start
 	end_time = end
 	total_duration = (end - start)*1000

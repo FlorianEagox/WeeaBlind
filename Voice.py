@@ -6,6 +6,7 @@ import pyttsx3
 from espeakng import ESpeakNG
 from pydub import AudioSegment
 import ffmpeg
+import numpy as np
 
 class Voice(abc.ABC):
 	class VoiceType(Enum):
@@ -63,6 +64,7 @@ class ESpeakVoice(Voice):
 		self.voice.synth_wav(text, file_name)
 
 	def set_speed(self, speed):
+		# current_speaker.set_speed(60*int((len(text.split(' ')) / (sub.end.total_seconds() - sub.start.total_seconds()))))
 		self.voice.speed = speed
 
 	def set_voice_params(self, voice=None, pitch=None):
@@ -93,11 +95,11 @@ class CoquiVoice(Voice):
 				language= 'en' if self.voice.is_multi_lingual else None
 			)
 		else:
-			return self.voice.tts(
+			return np.array(self.voice.tts(
 				text,
 				speaker=self.speaker,
 				language= 'en' if self.voice.is_multi_lingual else None
-			)
+			))
 
 	def set_voice_params(self, voice=None, speaker=None):
 		if voice:

@@ -43,6 +43,9 @@ class GUI(wx.Panel):
 		self.tab_diarization = DiarizationTab(tab_control, self)
 		tab_control.AddPage(self.tab_diarization, "Diarization")
 
+		btn_run_dub = wx.Button(self, label="Run Dubbing!")
+		btn_run_dub.Bind(wx.EVT_BUTTON, self.run_dub)
+
 		self.on_voice_change(None)
 
 		sizer = wx.BoxSizer(wx.VERTICAL)
@@ -55,7 +58,7 @@ class GUI(wx.Panel):
 		sizer.Add(self.check_match_volume, 0, wx.ALL|wx.ALIGN_LEFT, 5)
 		sizer.Add(self.lb_voices, 0, wx.ALL|wx.ALIGN_LEFT, 5)
 		sizer.Add(tab_control, 1, wx.EXPAND, 5)
-
+		sizer.Add(btn_run_dub, 1, wx.ALIGN_RIGHT, 5)
 		self.SetSizer(sizer)
 
 	def open_file(self, evenet):
@@ -90,6 +93,9 @@ class GUI(wx.Panel):
 		synth.currentSpeaker = synth.speakers[self.lb_voices.GetSelection()]
 		synth.sampleSpeaker = synth.currentSpeaker
 		self.tab_voice_config.update_voice_fields(event)
+
+	def run_dub(self, event):
+		synth.run_dubbing()
 
 gui = GUI(frame)
 frame.Show()

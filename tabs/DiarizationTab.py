@@ -35,11 +35,8 @@ class DiarizationEntry(wx.Panel):
 		pass
 
 	def on_sample_button_click(self, event):
-		adjustment = synth.adjust_fit_rate(synth.speakers[self.speaker].speak(self.text, 'output/sample.wav'), self.duration)
-		if self.context.check_match_volume:
-			adjustment = synth.match_volume(synth.get_snippet(self.start_time, self.end_time), adjustment, adjustment)
-		play(AudioSegment.from_file(adjustment))
-		pass
+		sample = synth.post_process(synth.speakers[self.speaker].speak(self.text, 'output/sample.wav'), self.start_time, self.end_time, self.context.check_match_volume.GetValue())
+		play(AudioSegment.from_file(sample))
 
 class DiarizationTab(wx.Panel):
 	def __init__(self, notebook, context):
@@ -52,7 +49,7 @@ class DiarizationTab(wx.Panel):
 		self.scroll_panel.SetSizer(self.scroll_sizer)
 		self.scroll_panel.SetScrollRate(0, 20)
 
-		self.create_entries()
+		# self.create_entries()
 
 		main_sizer = wx.BoxSizer(wx.VERTICAL)
 		main_sizer.Add(btn_run_diarize, 0, wx.CENTER)
@@ -74,16 +71,16 @@ class DiarizationTab(wx.Panel):
 			# 	start_time=entry[1],
 			# 	end_time=entry[2],
 			# 	speaker=entry[0],
-			# 	text=synth.subs_adjusted[synth.find_nearest([sub.start.total_seconds() for sub in synth.subs_adjusted], entry[1])].content
+			# 	text=synth.subs_adjusted[synth.find_nearest([sub.startZ for sub in synth.subs_adjusted], entry[1])].content
 			# )
 			diarization_entry = DiarizationEntry(
 				self.scroll_panel,
 				context=self.context,
-				start_time=entry.start.total_seconds(),
-				end_time=entry.end.total_seconds(),
-				duration=entry.end.total_seconds()-entry.start.total_seconds(),
-				speaker=synth.speech_diary_adjusted[synth.find_nearest([diary_entry[1] for diary_entry in synth.speech_diary_adjusted], entry.start.total_seconds())][0],
-				text=entry.content # synth.subs_adjusted[synth.find_nearest([sub.start.total_seconds() for sub in synth.subs_adjusted], entry[1])].content
+				start_time=entry.start,
+				end_time=entry.end,
+				duration=entry.end-entry.start,
+				speaker=synth.speech_diary_adjusted[synth.find_nearest([diary_entry[1] for diary_entry in synth.speech_diary_adjusted], entry.start)][0],
+				text=entry.content # synth.subs_adjusted[synth.find_nearest([sub.start for sub in synth.subs_adjusted], entry[1])].content
 			)
 			self.scroll_sizer.Add(diarization_entry, 0, wx.EXPAND | wx.ALL, border=5)
 

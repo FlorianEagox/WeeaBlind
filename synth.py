@@ -24,6 +24,7 @@ remove_xml = re.compile(r'<[^>]+>|\{[^}]+\}')
 subs = subs_adjusted = speech_diary = speech_diary_adjusted = []
 # pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization@2.1", use_auth_token="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")
 current_file = test_video_name
+dub_track = None
 
 def get_output_path(input, suffix, prefix=''):
 	return f"output/{prefix}{input.split('/')[-1].split('.')[0]}{suffix}"
@@ -90,16 +91,19 @@ def find_nearest_speaker(sub):
 	][0]
 
 def run_dubbing():
-	empty_audio = AudioSegment.empty()
+	global dub_track
+	empty_audio = AudioSegment.silent(total_duration * 1000, frame_rate=22050)
+	total_errors = 0
 	for sub in subs_adjusted:
 		print(f"{sub.index}/{len(subs_adjusted)}")
 		current_speaker = find_nearest_speaker(sub)
 		try:
 			line = dub_line_ram(current_speaker, sub)
-			empty_audio.overlay(line, position=sub.start*1000)
+			empty_audio = empty_audio.overlay(line, sub.start*1000)
 		except:
-			pass
-	empty_audio.export("new.wav", format="wav")
+			total_errors += 1
+	dub_track = empty_audio.export("new.wav", format="wav")
+	print(total_errors)
 
 # This may be used for multithreading?
 def combine_segments():
@@ -236,11 +240,23 @@ def run_diarization():
 	load_diary(output)
 	update_diary_timing()
 
-speakers = [Voice.Voice(Voice.Voice.VoiceType.COQUI, name="Sample")]
-speakers[0].set_voice_params('tts_models/en/vctk/vits', 'p326') # p340
-currentSpeaker = speakers[0]
-sampleSpeaker = currentSpeaker
+def mix_av(video_path=test_video_name, wav_path='new.wav', mixing_ratio=4, output_path="megamix.mkv"):
+	input_video = ffmpeg.input(video_path)
+	input_audio = input_video.audio
+	input_wav = ffmpeg.input(wav_path).audio
 
-load_video(test_video_name)
-time_change(test_start_time, test_end_time)
-combine_segments()
+	mixed_audio = ffmpeg.filter([input_audio, input_wav], 'amix', duration='first', weights=f"1 {mixing_ratio}")
+
+	output = ffmpeg.output(input_video['v'], mixed_audio, output_path, vcodec="copy", acodec="aac")    
+	output = output.global_args('-shortest')
+	ffmpeg.run(output, overwrite_output=True)
+
+# speakers = [Voice.Voice(Voice.Voice.VoiceType.COQUI, name="Sample")]
+# speakers[0].set_voice_params('tts_models/en/vctk/vits', 'p326') # p340
+# currentSpeaker = speakers[0]
+# sampleSpeaker = currentSpeaker
+
+# load_video(test_video_name)
+# time_change(test_start_time, test_end_time)
+# combine_segments()
+# mix_av()

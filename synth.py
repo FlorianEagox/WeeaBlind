@@ -13,7 +13,7 @@ from audiotsm.io.wav import WavReader, WavWriter
 from audiotsm.io.array import ArrayReader, ArrayWriter
 from yt_dlp import YoutubeDL
 from pyannote.audio import Pipeline
-
+import time
 
 test_video_name = "saiki.mkv"
 default_sample_path = "./output/sample.wav"
@@ -92,6 +92,7 @@ def find_nearest_speaker(sub):
 
 def run_dubbing():
 	global dub_track
+	operation_start_time = time.process_time()
 	empty_audio = AudioSegment.silent(total_duration * 1000, frame_rate=22050)
 	total_errors = 0
 	for i, sub in enumerate(subs_adjusted):
@@ -104,6 +105,8 @@ def run_dubbing():
 			total_errors += 1
 			print(e)
 	dub_track = empty_audio.export(get_output_path(current_file, '-dubtrack.wav'), format="wav")
+	mix_av()
+	print(f"TOTAL TIME TAKEN: {time.process_time() - operation_start_time}")
 	print(total_errors)
 
 # This may be used for multithreading?
@@ -159,7 +162,7 @@ def get_snippet(start, end):
 	return current_audio[start*1000:end*1000]
 
 def match_volume(source_snippet, target):
-	ratio = source_snippet.rms / target.rms
+	ratio = source_snippet.rms / (target.rms | 1)
 	# ratio = source_snippet.dBFS - target.dBFS
 	adjusted_audio = target.apply_gain(ratio)
 	# adjusted_audio = target + raio
@@ -212,7 +215,6 @@ def time_change(start, end):
 def crop_audio(file):
 	# ffmpeg -i .\saiki.mkv -vn -ss 84 -to 1325 crop.wav
 	output = get_output_path(file, "-crop.wav")
-	print(output)
 	(
 		ffmpeg
 		.input(file, ss=start_time, to=end_time)
@@ -246,7 +248,7 @@ def run_diarization():
 	output = get_output_path(current_file, ".rttm")
 	# diarization = pipeline(crop)
 	# with open(output, "w") as rttm:
-	# 	diarization.write_rttm(rttm)
+		# diarization.write_rttm(rttm)
 	load_diary(output)
 	update_diary_timing()
 

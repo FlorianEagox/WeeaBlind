@@ -94,15 +94,16 @@ def run_dubbing():
 	global dub_track
 	empty_audio = AudioSegment.silent(total_duration * 1000, frame_rate=22050)
 	total_errors = 0
-	for sub in subs_adjusted:
-		print(f"{sub.index}/{len(subs_adjusted)}")
+	for i, sub in enumerate(subs_adjusted):
+		print(f"{i}/{len(subs_adjusted)}")
 		current_speaker = find_nearest_speaker(sub)
 		try:
 			line = dub_line_ram(current_speaker, sub)
 			empty_audio = empty_audio.overlay(line, sub.start*1000)
-		except:
+		except Exception as e:
 			total_errors += 1
-	dub_track = empty_audio.export("new.wav", format="wav")
+			print(e)
+	dub_track = empty_audio.export(get_output_path(current_file, '-dubtrack.wav'), format="wav")
 	print(total_errors)
 
 # This may be used for multithreading?
@@ -133,16 +134,22 @@ def match_rate(target, source_duration, destination_path=None):
 			tsm.run(reader, writer)
 	return destination_path
 
-def match_rate_ram(target, source_duration):
+def match_rate_ram(target, source_duration, outpath=None):
 	num_samples = len(target)
 	target = target.reshape(1, num_samples)
 	duration = num_samples / 22050
 	rate = duration*1/source_duration
 	reader = ArrayReader(target)
 	tsm = wsola(reader.channels, speed=rate)
-	rate_adjusted = ArrayWriter(channels=1)
-	tsm.run(reader, rate_adjusted)
-	return rate_adjusted.data
+	if not outpath:
+		rate_adjusted = ArrayWriter(channels=1)
+		tsm.run(reader, rate_adjusted)
+		return rate_adjusted.data
+	else:
+		rate_adjusted = WavWriter(outpath, 1, 22050)
+		tsm.run(reader, rate_adjusted)
+		rate_adjusted.close()
+		return outpath
 
 def Download(link):
 	YoutubeDL().download(link)
@@ -177,7 +184,7 @@ def seconds_to_timecode(seconds):
 		timecode += f"{hours}:"
 	if minutes:
 		timecode += f"{minutes}:" 
-	timecode = f"{timecode}{seconds:.2f}"
+	timecode = f"{timecode}{seconds:05.2f}"
 	return timecode
 
 def list_streams():
@@ -216,19 +223,22 @@ def crop_audio(file):
 	)
 	return output
 
-def dub_line_ram(speaker, sub):
+def dub_line_ram(speaker, sub, output=True):
 	output_path = get_output_path(str(sub.index), '.wav', 'files/')
 	tts_audio = speakers[speaker].speak(sub.content, None)
 	rate_adjusted = match_rate_ram(tts_audio, sub.end-sub.start)
-	audio_as_int = (rate_adjusted * 2**15-1).astype(np.int16).tobytes()
+	data = rate_adjusted / np.max(np.abs(rate_adjusted))
+	audio_as_int = (data * 2**15-1).astype(np.int16).tobytes()
 	segment = AudioSegment(
 		audio_as_int,
 		frame_rate=22050,
 		sample_width=2,
 		channels=1
 	)
+	# segment = AudioSegment.from_wav(output_path)
 	result = match_volume(get_snippet(sub.start, sub.end), segment)
-	result.export(output_path, format='wav')
+	if output:
+		result.export(output_path, format='wav')
 	return result
 
 def run_diarization():
@@ -240,7 +250,7 @@ def run_diarization():
 	load_diary(output)
 	update_diary_timing()
 
-def mix_av(video_path=test_video_name, wav_path='new.wav', mixing_ratio=4, output_path="megamix.mkv"):
+def mix_av(video_path=current_file, wav_path=get_output_path(current_file, '-dubtrack.wav'), mixing_ratio=6, output_path="megamix.mkv"):
 	input_video = ffmpeg.input(video_path)
 	input_audio = input_video.audio
 	input_wav = ffmpeg.input(wav_path).audio
@@ -251,12 +261,14 @@ def mix_av(video_path=test_video_name, wav_path='new.wav', mixing_ratio=4, outpu
 	output = output.global_args('-shortest')
 	ffmpeg.run(output, overwrite_output=True)
 
-# speakers = [Voice.Voice(Voice.Voice.VoiceType.COQUI, name="Sample")]
-# speakers[0].set_voice_params('tts_models/en/vctk/vits', 'p326') # p340
-# currentSpeaker = speakers[0]
-# sampleSpeaker = currentSpeaker
+speakers = [Voice.Voice(Voice.Voice.VoiceType.COQUI, name="Sample")]
+speakers[0].set_voice_params('tts_models/en/vctk/vits', 'p326') # p340
+currentSpeaker = speakers[0]
+sampleSpeaker = currentSpeaker
 
-# load_video(test_video_name)
-# time_change(test_start_time, test_end_time)
+load_video(test_video_name)
+time_change(test_start_time, test_end_time)
 # combine_segments()
 # mix_av()
+
+dub_line_ram(0, subs_adjusted[5])

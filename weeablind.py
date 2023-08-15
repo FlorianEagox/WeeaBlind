@@ -27,8 +27,8 @@ class GUI(wx.Panel):
 		self.check_match_volume = wx.CheckBox(self, label="Match Speaker Volume")
 		self.check_match_volume.SetValue(True)
 		
-		self.txt_start = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER, value="00:00")
-		self.txt_end   = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER, value="00:00")
+		self.txt_start = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER, value=synth.seconds_to_timecode(synth.start_time))
+		self.txt_end   = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER, value=synth.seconds_to_timecode(synth.end_time))
 		self.txt_start.Bind(wx.EVT_TEXT_ENTER, self.change_crop_time)
 		self.txt_end  .Bind(wx.EVT_TEXT_ENTER, self.change_crop_time)
 

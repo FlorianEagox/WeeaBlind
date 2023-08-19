@@ -14,6 +14,17 @@ from audiotsm.io.array import ArrayReader, ArrayWriter
 from yt_dlp import YoutubeDL
 from pyannote.audio import Pipeline
 import time
+import concurrent.futures
+
+import torchaudio
+from speechbrain.pretrained import EncoderClassifier
+language_id = EncoderClassifier.from_hparams(source="speechbrain/lang-id-voxlingua107-ecapa", savedir="tmp")
+# Download Thai language sample from Omniglot and cvert to suitable form
+signal = language_id.load_audio("./output/sample.wav")
+prediction =  language_id.classify_batch(signal)
+print(prediction[3])
+
+exit()
 
 test_video_name = "saiki.mkv"
 default_sample_path = "./output/sample.wav"
@@ -95,19 +106,26 @@ def run_dubbing():
 	operation_start_time = time.process_time()
 	empty_audio = AudioSegment.silent(total_duration * 1000, frame_rate=22050)
 	total_errors = 0
-	for i, sub in enumerate(subs_adjusted):
-		print(f"{i}/{len(subs_adjusted)}")
-		current_speaker = find_nearest_speaker(sub)
-		try:
-			line = dub_line_ram(current_speaker, sub)
-			empty_audio = empty_audio.overlay(line, sub.start*1000)
-		except Exception as e:
-			total_errors += 1
-			print(e)
+	with concurrent.futures.ProcessPoolExecutor(max_workers=4) as pool:
+		tasks = [pool.submit(dub_task, sub, i) for i, sub in enumerate(subs_adjusted)]		
+		for future in concurrent.futures.as_completed(tasks):
+			print(future)
+			
 	dub_track = empty_audio.export(get_output_path(current_file, '-dubtrack.wav'), format="wav")
 	mix_av()
 	print(f"TOTAL TIME TAKEN: {time.process_time() - operation_start_time}")
 	print(total_errors)
+
+def dub_task(sub, i):
+	print(f"{i}/{len(subs_adjusted)}")
+	current_speaker = find_nearest_speaker(sub)
+	try:
+		line = dub_line_ram(current_speaker, sub)
+		empty_audio = empty_audio.overlay(line, sub.start*1000) 
+	except Exception as e:
+		total_errors += 1
+		print(e)
+
 
 # This may be used for multithreading?
 def combine_segments():
@@ -252,15 +270,17 @@ def run_diarization():
 	load_diary(output)
 	update_diary_timing()
 
-def mix_av(video_path=current_file, wav_path=get_output_path(current_file, '-dubtrack.wav'), mixing_ratio=6, output_path="megamix.mkv"):
+def mix_av(video_path=current_file, wav_path=get_output_path(current_file, '-dubtrack.wav'), mixing_ratio=6, output_path=get_output_path(current_file, '-dubbed.mkv')):
 	input_video = ffmpeg.input(video_path)
 	input_audio = input_video.audio
 	input_wav = ffmpeg.input(wav_path).audio
 
 	mixed_audio = ffmpeg.filter([input_audio, input_wav], 'amix', duration='first', weights=f"1 {mixing_ratio}")
 
-	output = ffmpeg.output(input_video['v'], mixed_audio, output_path, vcodec="copy", acodec="aac")    
-	output = output.global_args('-shortest')
+	output = (
+		ffmpeg.output(input_video['v'], mixed_audio, input_video['s'], output_path, vcodec="copy", acodec="aac")
+		.global_args('-shortest')
+	)
 	ffmpeg.run(output, overwrite_output=True)
 
 speakers = [Voice.Voice(Voice.Voice.VoiceType.COQUI, name="Sample")]
@@ -268,9 +288,10 @@ speakers[0].set_voice_params('tts_models/en/vctk/vits', 'p326') # p340
 currentSpeaker = speakers[0]
 sampleSpeaker = currentSpeaker
 
-load_video(test_video_name)
-time_change(test_start_time, test_end_time)
-# combine_segments()
+# load_video(test_video_name)
+# time_change(test_start_time, test_end_time)
+# run_diarization()
+# run_dubbing()
 # mix_av()
 
-dub_line_ram(0, subs_adjusted[5])
+# dub_line_ram(0, subs_adjusted[5])

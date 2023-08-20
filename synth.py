@@ -18,15 +18,9 @@ import concurrent.futures
 
 import torchaudio
 from speechbrain.pretrained import EncoderClassifier
-language_id = EncoderClassifier.from_hparams(source="speechbrain/lang-id-voxlingua107-ecapa", savedir="tmp")
-# Download Thai language sample from Omniglot and cvert to suitable form
-signal = language_id.load_audio("./output/sample.wav")
-prediction =  language_id.classify_batch(signal)
-print(prediction[3])
 
-exit()
 
-test_video_name = "saiki.mkv"
+test_video_name = "output/download.webm"
 default_sample_path = "./output/sample.wav"
 start_time = end_time = total_duration = 0
 test_start_time = 94
@@ -36,20 +30,23 @@ subs = subs_adjusted = speech_diary = speech_diary_adjusted = []
 # pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization@2.1", use_auth_token="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")
 current_file = test_video_name
 dub_track = None
+is_video_multi_speaker = False
+
 
 def get_output_path(input, suffix, prefix=''):
 	return f"output/{prefix}{input.split('/')[-1].split('.')[0]}{suffix}"
 
-def load_subs(file):
-	output = f"output/{file.split('/')[-1].split('.')[0]}.srt"
-	(
-		ffmpeg
-		.input(file)
-		.output(output)
-		.global_args('-loglevel', 'error')
-		.run(overwrite_output=True)
-	)
-	with open(output, "r") as f:
+def load_subs(imported=False):
+	export = get_output_path(current_file, '.srt')
+	if imported:
+		(
+			ffmpeg
+			.input(export)
+			.output(export)
+			.global_args('-loglevel', 'error')
+			.run(overwrite_output=True)
+		)
+	with open(export, "r") as f:
 		subs = list(srt.parse(f.read()))
 		for sub in subs:
 			sub.content = re.sub(remove_xml, '', sub.content)
@@ -100,32 +97,39 @@ def find_nearest_speaker(sub):
 			sub.start
 		)
 	][0]
-
 def run_dubbing():
 	global dub_track
+	total_errors = 0
 	operation_start_time = time.process_time()
 	empty_audio = AudioSegment.silent(total_duration * 1000, frame_rate=22050)
-	total_errors = 0
-	with concurrent.futures.ProcessPoolExecutor(max_workers=4) as pool:
-		tasks = [pool.submit(dub_task, sub, i) for i, sub in enumerate(subs_adjusted)]		
-		for future in concurrent.futures.as_completed(tasks):
-			print(future)
-			
+	# with concurrent.futures.ProcessPoolExecutor(max_workers=4) as pool:
+	# 	tasks = [pool.submit(dub_task, sub, i) for i, sub in enumerate(subs_adjusted)]		
+	# 	for future in concurrent.futures.as_completed(tasks):
+	# 		print(future)
+	for i, sub in enumerate(subs_adjusted):
+		print(f"{i}/{len(subs_adjusted)}")
+		current_speaker = find_nearest_speaker(sub) if is_video_multi_speaker else 0
+		try:
+			line = dub_line_ram(current_speaker, sub)
+			empty_audio = empty_audio.overlay(line, sub.start*1000) 
+		except Exception as e:
+			print(e)
+			total_errors += 1
+
 	dub_track = empty_audio.export(get_output_path(current_file, '-dubtrack.wav'), format="wav")
-	mix_av()
+	mix_av(mixing_ratio=4)
 	print(f"TOTAL TIME TAKEN: {time.process_time() - operation_start_time}")
 	print(total_errors)
 
 def dub_task(sub, i):
 	print(f"{i}/{len(subs_adjusted)}")
-	current_speaker = find_nearest_speaker(sub)
+	current_speaker = find_nearest_speaker(sub) if is_video_multi_speaker else 0
 	try:
 		line = dub_line_ram(current_speaker, sub)
 		empty_audio = empty_audio.overlay(line, sub.start*1000) 
 	except Exception as e:
-		total_errors += 1
 		print(e)
-
+		total_errors += 1
 
 # This may be used for multithreading?
 def combine_segments():
@@ -173,8 +177,7 @@ def match_rate_ram(target, source_duration, outpath=None):
 		return outpath
 
 def Download(link):
-	YoutubeDL().download(link)
-# Download("https://www.youtube.com/watch?v=VOjAlLoXOhQ")
+	YoutubeDL({'writesubtitles': True, 'outtmpl': 'output/download.%(ext)s', "subformat": "srt"}).download(link)
 
 def get_snippet(start, end):
 	return current_audio[start*1000:end*1000]
@@ -212,9 +215,10 @@ def list_streams():
 	return [stream for stream in ffmpeg.probe(test_video_name)["streams"] if stream['codec_type'] != 'attachment']
 
 # This is like REALLY STINKY and DESPERATELY needs to be refactored... but i don't wanna right now
-def load_video(video_path=test_video_name):
-	global subs, current_audio, total_duration
-	subs = load_subs(video_path)
+def load_video(video_path):
+	global subs, current_audio, total_duration, current_file
+	current_file = video_path
+	subs = load_subs()
 	current_audio = AudioSegment.from_file(video_path)
 	total_duration = float(ffmpeg.probe(video_path)["format"]["duration"])
 	time_change(0, total_duration)
@@ -256,7 +260,7 @@ def dub_line_ram(speaker, sub, output=True):
 		channels=1
 	)
 	# segment = AudioSegment.from_wav(output_path)
-	result = match_volume(get_snippet(sub.start, sub.end), segment)
+	result = segment #match_volume(get_snippet(sub.start, sub.end), segment)
 	if output:
 		result.export(output_path, format='wav')
 	return result
@@ -278,15 +282,36 @@ def mix_av(video_path=current_file, wav_path=get_output_path(current_file, '-dub
 	mixed_audio = ffmpeg.filter([input_audio, input_wav], 'amix', duration='first', weights=f"1 {mixing_ratio}")
 
 	output = (
-		ffmpeg.output(input_video['v'], mixed_audio, input_video['s'], output_path, vcodec="copy", acodec="aac")
+		# input_video['s']
+		ffmpeg.output(input_video['v'], mixed_audio, output_path, vcodec="copy", acodec="aac")
 		.global_args('-shortest')
 	)
 	ffmpeg.run(output, overwrite_output=True)
 
+language_id = EncoderClassifier.from_hparams(source="speechbrain/lang-id-voxlingua107-ecapa", savedir="tmp")
+def isnt_target_language(target="./output/video_snippet.wav", exclusion="English"):
+	signal = language_id.load_audio(target)
+	prediction = language_id.classify_batch(signal)
+	return prediction[3][0].split(' ')[1] != exclusion
+
+isnt_target_language("output/spanish_sample.mp3")
+
+def find_multilingual_subtiles():
+	global subs_adjusted
+	operation_start_time = time.process_time()
+	multi_lingual_subs = []
+	for i, sub in enumerate(subs_adjusted):
+		print(f"{i}/{len(subs_adjusted)}")
+		snippet = get_snippet(sub.start, sub.end).export(get_output_path('video_snippet', '.wav'), format="wav")
+		if isnt_target_language("output/video_snippet.wav"):
+			multi_lingual_subs.append(sub)
+	subs_adjusted = multi_lingual_subs
+	print(f"TOTAL TIME TAKEN: {time.process_time() - operation_start_time}")
+
 speakers = [Voice.Voice(Voice.Voice.VoiceType.COQUI, name="Sample")]
 speakers[0].set_voice_params('tts_models/en/vctk/vits', 'p326') # p340
 currentSpeaker = speakers[0]
-sampleSpeaker = currentSpeaker
+# sampleSpeaker = currentSpeaker
 
 # load_video(test_video_name)
 # time_change(test_start_time, test_end_time)
@@ -295,3 +320,8 @@ sampleSpeaker = currentSpeaker
 # mix_av()
 
 # dub_line_ram(0, subs_adjusted[5])
+
+# Download("https://www.youtube.com/watch?v=VOjAlLoXOhQ")
+load_video("./output/download.webm")
+find_multilingual_subtiles()
+run_dubbing()

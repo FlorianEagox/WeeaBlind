@@ -15,7 +15,7 @@ class DiarizationEntry(wx.Panel):
 		self.speaker = synth.find_nearest_speaker(sub)
 		self.duration = self.end_time - self.start_time
 		self.context = context
-
+		
 		entry_box = wx.StaticBox(self, label=f"{synth.seconds_to_timecode(self.start_time)} - {synth.seconds_to_timecode(self.end_time)}")
 		entry_sizer = wx.StaticBoxSizer(entry_box, wx.VERTICAL)
 
@@ -44,8 +44,10 @@ class DiarizationTab(wx.Panel):
 	def __init__(self, notebook, context):
 		super().__init__(notebook)
 		self.context = context
-		btn_run_diarize = wx.Button(self, label="Run Diarization")
-		btn_run_diarize.Bind(wx.EVT_BUTTON, self.run_diarization)
+		btn_language_filter = wx.Button(self, label="Filter Language")
+		btn_language_filter.Bind(wx.EVT_BUTTON, synth.find_multilingual_subtiles)
+		btn_diarize = wx.Button(self, label="Run Diarization")
+		btn_diarize.Bind(wx.EVT_BUTTON, self.run_diarization)
 		self.scroll_panel = wx.ScrolledWindow(self, style=wx.VSCROLL)
 		self.scroll_sizer = wx.BoxSizer(wx.VERTICAL)
 		self.scroll_panel.SetSizer(self.scroll_sizer)
@@ -54,13 +56,19 @@ class DiarizationTab(wx.Panel):
 		# self.create_entries()
 
 		main_sizer = wx.BoxSizer(wx.VERTICAL)
-		main_sizer.Add(btn_run_diarize, 0, wx.CENTER)
+		main_sizer.Add(btn_language_filter, 0, wx.CENTER)
+		main_sizer.Add(btn_diarize, 0, wx.CENTER)
 		main_sizer.Add(self.scroll_panel, 1, wx.EXPAND | wx.ALL, border=10)
 
 		self.SetSizerAndFit(main_sizer)
 
 	def run_diarization(self, event):
 		synth.run_diarization()
+		self.create_entries()
+		self.context.update_voices_list()
+	
+	def filter_language(self, event):
+		synth.find_multilingual_subtiles()
 		self.create_entries()
 		self.context.update_voices_list()
 

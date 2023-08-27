@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from Voice import Voice
 import ffmpeg
-import synth
+from synth import get_output_path, current_file
 import srt
 from re import compile, sub as substitute
 
@@ -17,7 +17,7 @@ class DubbedLine:
 
 
 def load_subs(import_path=False):
-	export = synth.get_output_path(synth.current_file, '.srt')
+	export = get_output_path(current_file, '.srt')
 	if import_path: # For importing an external subtitles file
 		(
 			ffmpeg
@@ -37,4 +37,3 @@ def load_subs(import_path=False):
 			)
 			for sub in original_subs
 		]
-		

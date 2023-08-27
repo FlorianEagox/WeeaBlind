@@ -102,7 +102,7 @@ class CoquiVoice(Voice):
 			))
 
 	def set_voice_params(self, voice=None, speaker=None):
-		if voice:
+		if voice and voice != self.voice_option:
 			self.voice.load_tts_model_by_name(voice)
 			self.voice_option = self.voice.model_name
 		self.is_multispeaker = self.voice.is_multi_speaker

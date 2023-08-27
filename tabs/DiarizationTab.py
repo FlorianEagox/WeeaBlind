@@ -8,11 +8,11 @@ import wx
 class DiarizationEntry(wx.Panel):
 	def __init__(self, parent, context, sub):
 		super().__init__(parent)
-		self.text = sub.content
+		self.text = sub.text
 		self.sub = sub
 		self.start_time = sub.start
 		self.end_time = sub.end
-		self.speaker = synth.find_nearest_speaker(sub)
+		self.speaker = sub.voice
 		self.duration = self.end_time - self.start_time
 		self.context = context
 		
@@ -38,14 +38,14 @@ class DiarizationEntry(wx.Panel):
 
 	def on_sample_button_click(self, event):
 		# sample = synth.dub_line_ram(synth.speakers[self.speaker].speak(self.text, 'output/sample.wav'), self.start_time, self.end_time, self.context.check_match_volume.GetValue())
-		play(synth.dub_line_ram(self.speaker, self.sub))
+		play(synth.dub_line_ram(self.sub))
 
 class DiarizationTab(wx.Panel):
 	def __init__(self, notebook, context):
 		super().__init__(notebook)
 		self.context = context
 		btn_language_filter = wx.Button(self, label="Filter Language")
-		btn_language_filter.Bind(wx.EVT_BUTTON, synth.find_multilingual_subtiles)
+		btn_language_filter.Bind(wx.EVT_BUTTON, self.filter_language)
 		btn_diarize = wx.Button(self, label="Run Diarization")
 		btn_diarize.Bind(wx.EVT_BUTTON, self.run_diarization)
 		self.scroll_panel = wx.ScrolledWindow(self, style=wx.VSCROLL)

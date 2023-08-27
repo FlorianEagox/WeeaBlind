@@ -1,5 +1,6 @@
 # This file implements all the major globals & functions of the app. It's becoming unmaintainable and desperately needs to be refactored.
 
+import fcntl
 import ffmpeg
 import srt
 from TTS.api import TTS
@@ -18,7 +19,9 @@ import concurrent.futures
 
 import torchaudio
 from speechbrain.pretrained import EncoderClassifier
-
+import dub_line
+import json
+import random
 
 test_video_name = "./output/download.webm"
 default_sample_path = "./output/sample.wav"
@@ -26,7 +29,7 @@ start_time = end_time = total_duration = 0
 test_start_time = 94
 test_end_time =  1324
 subs = subs_adjusted = speech_diary = speech_diary_adjusted = []
-# pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization@2.1", use_auth_token="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")
+pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization@2.1", use_auth_token="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")
 current_file = test_video_name
 dub_track = None
 is_video_multi_speaker = False
@@ -59,11 +62,12 @@ def find_nearest(array, value):
 	return (np.abs(np.asarray(array) - value)).argmin()
 
 def initialize_speakers(speaker_count):
-	speakers = []
+	speakers = [Voice.Voice(Voice.Voice.VoiceType.COQUI, name="Sample")]
+	speakers[0].set_voice_params('tts_models/en/vctk/vits', 'p326') # p340
+	speaker_options = speakers[0].list_speakers()
 	for i in range(speaker_count):
 		speakers.append(Voice.CoquiVoice([], f"Voice {i}"))
-		speakers[i].set_voice_params('tts_models/en/vctk/vits', 'p326') # p340
-
+		speakers[i].set_voice_params('tts_models/en/vctk/vits', random.choice(speaker_options))
 	return speakers
 
 def post_process(file, source_start, source_end, adjust_volume=True):
@@ -90,9 +94,8 @@ def run_dubbing():
 	# 		print(future)
 	for i, sub in enumerate(subs_adjusted):
 		print(f"{i}/{len(subs_adjusted)}")
-		current_speaker = find_nearest_speaker(sub) if is_video_multi_speaker else 0
 		try:
-			line = dub_line_ram(current_speaker, sub)
+			line = dub_line_ram(sub)
 			empty_audio = empty_audio.overlay(line, sub.start*1000) 
 		except Exception as e:
 			print(e)
@@ -130,22 +133,24 @@ def combine_segments():
 def sampleVoice(text, output=default_sample_path):
 	play(AudioSegment.from_file(sampleSpeaker.speak(text, output)))
 
-def match_rate(target, source_duration, destination_path=None):
+def match_rate(target, source_duration, destination_path=None, clamp_min=0, clamp_max=4):
 	if destination_path == None:
 		destination_path = target.split('.')[0] + '-timeshift.wav'
 	duration = float(ffmpeg.probe(target)["format"]["duration"])
 	rate = duration*1/source_duration
+	rate = np.clip(rate, clamp_min, clamp_max)
 	with WavReader(target) as reader:
 		with WavWriter(destination_path, reader.channels, reader.samplerate) as writer:
 			tsm = wsola(reader.channels, speed=rate)
 			tsm.run(reader, writer)
 	return destination_path
 
-def match_rate_ram(target, source_duration, outpath=None):
+def match_rate_ram(target, source_duration, outpath=None, clamp_min=0.8, clamp_max=2.5):
 	num_samples = len(target)
 	target = target.reshape(1, num_samples)
 	duration = num_samples / 22050
 	rate = duration*1/source_duration
+	rate = np.clip(rate, clamp_min, clamp_max)
 	reader = ArrayReader(target)
 	tsm = wsola(reader.channels, speed=rate)
 	if not outpath:
@@ -158,8 +163,16 @@ def match_rate_ram(target, source_duration, outpath=None):
 		rate_adjusted.close()
 		return outpath
 
-def Download(link):
-	YoutubeDL({'writesubtitles': True, 'outtmpl': 'output/download.%(ext)s', "subformat": "srt"}).download(link)
+def download_video(link):
+	options = {
+		'outtmpl': 'output/download.%(ext)s',
+		'writesubtitles': True,
+		"subtitlesformat": "srt"
+	}
+	with YoutubeDL(options) as ydl:
+		info = ydl.extract_info(link)
+		return ydl.prepare_filename(info), list(info["subtitles"].values())[0][-1]["filepath"]
+	
 
 def get_snippet(start, end):
 	return current_audio[start*1000:end*1000]
@@ -193,14 +206,15 @@ def seconds_to_timecode(seconds):
 	timecode = f"{timecode}{seconds:05.2f}"
 	return timecode
 
-def list_streams():
-	return [stream for stream in ffmpeg.probe(test_video_name)["streams"] if stream['codec_type'] != 'attachment']
 
 # This is like REALLY STINKY and DESPERATELY needs to be refactored... but i don't wanna right now
 def load_video(video_path):
 	global subs, current_audio, total_duration, current_file
+	sub_path = ""
+	if video_path.startswith("http"):
+		video_path, sub_path = download_video(video_path)
 	current_file = video_path
-	subs = load_subs()
+	subs = dub_line.load_subs(sub_path or video_path)
 	current_audio = AudioSegment.from_file(video_path)
 	total_duration = float(ffmpeg.probe(video_path)["format"]["duration"])
 	time_change(0, total_duration)
@@ -229,12 +243,12 @@ def crop_audio(file):
 	)
 	return output
 
-def dub_line_ram(speaker, sub, output=True):
+def dub_line_ram(sub, output=True):
 	output_path = get_output_path(str(sub.index), '.wav', 'files/')
-	tts_audio = speakers[speaker].speak(sub.content, None)
+	tts_audio = speakers[sub.voice].speak(sub.text, None)
 	rate_adjusted = match_rate_ram(tts_audio, sub.end-sub.start)
 	data = rate_adjusted / np.max(np.abs(rate_adjusted))
-	audio_as_int = (data * 2**15-1).astype(np.int16).tobytes()
+	audio_as_int = (data * (2**15)).astype(np.int16).tobytes()
 	segment = AudioSegment(
 		audio_as_int,
 		frame_rate=22050,
@@ -247,14 +261,21 @@ def dub_line_ram(speaker, sub, output=True):
 		result.export(output_path, format='wav')
 	return result
 
+# This function will attempt to optimize the audio file by isolating audio to the subtitles and removing non-vocal noise
+def optimize_audio_diarization():
+	pass
+
 def run_diarization():
 	crop = crop_audio(current_file)
 	output = get_output_path(current_file, ".rttm")
 	# diarization = pipeline(crop)
 	# with open(output, "w") as rttm:
-		# diarization.write_rttm(rttm)
+	# 	diarization.write_rttm(rttm)
 	load_diary(output)
 	update_diary_timing()
+	for sub in subs_adjusted:
+		sub.voice = find_nearest_speaker(sub)
+
 
 def mix_av(video_path=current_file, wav_path=get_output_path(current_file, '-dubtrack.wav'), mixing_ratio=6, output_path=get_output_path(current_file, '-dubbed.mkv')):
 	input_video = ffmpeg.input(video_path)
@@ -276,8 +297,6 @@ def isnt_target_language(target="./output/video_snippet.wav", exclusion="English
 	prediction = language_id.classify_batch(signal)
 	return prediction[3][0].split(' ')[1] != exclusion
 
-isnt_target_language("output/spanish_sample.mp3")
-
 def find_multilingual_subtiles():
 	global subs_adjusted
 	operation_start_time = time.process_time()
@@ -293,7 +312,7 @@ def find_multilingual_subtiles():
 speakers = [Voice.Voice(Voice.Voice.VoiceType.COQUI, name="Sample")]
 speakers[0].set_voice_params('tts_models/en/vctk/vits', 'p326') # p340
 currentSpeaker = speakers[0]
-# sampleSpeaker = currentSpeaker
+sampleSpeaker = currentSpeaker
 
 # load_video(test_video_name)
 # time_change(test_start_time, test_end_time)
@@ -302,5 +321,3 @@ currentSpeaker = speakers[0]
 # mix_av()
 
 # dub_line_ram(0, subs_adjusted[5])
-
-# Download("https://www.youtube.com/watch?v=VOjAlLoXOhQ")

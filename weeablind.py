@@ -18,7 +18,8 @@ class GUI(wx.Panel):
 		btn_choose_file = wx.Button(self, label="Choose FIle")
 		btn_choose_file.Bind(wx.EVT_BUTTON, self.open_file)
 
-		self.txt_main_file = wx.TextCtrl(self, wx.TC_LEFT, synth.test_video_name)
+		self.txt_main_file = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER, value=synth.test_video_name)
+		self.txt_main_file.Bind(wx.EVT_TEXT_ENTER, lambda event: self.load_video(self.txt_main_file.Value))
 		lbl_title = wx.StaticText(self, label="WeeaBlind")
 
 		lbl_GPU = wx.StaticText(self, label=f"GPU Detected? {is_available()}")
@@ -74,8 +75,8 @@ class GUI(wx.Panel):
 			dlg.Destroy()
 
 	def load_video(self, video_path):
-		self.txt_main_file.Value = video_path
 		synth.load_video(video_path)
+		self.txt_main_file.Value = synth.current_file
 		self.txt_start.SetValue(synth.seconds_to_timecode(synth.start_time))
 		self.txt_end.SetValue(synth.seconds_to_timecode(synth.end_time))
 		self.tab_diarization.create_entries()

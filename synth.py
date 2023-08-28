@@ -165,17 +165,18 @@ def match_rate_ram(target, source_duration, outpath=None, clamp_min=0.8, clamp_m
 		rate_adjusted.close()
 		return outpath
 
-def download_video(link):
+def download_video(link, progress_hook=None, callback=None):
 	options = {
 		'outtmpl': 'output/download.%(ext)s',
 		'writesubtitles': True,
-		"subtitlesformat": "srt"
+		"subtitlesformat": "srt",
+		"progress_hooks": (progress_hook,)
 	}
 	with YoutubeDL(options) as ydl:
 		info = ydl.extract_info(link)
+		callback()
 		return ydl.prepare_filename(info), list(info["subtitles"].values())[0][-1]["filepath"]
 	
-
 def get_snippet(start, end):
 	return current_audio[start*1000:end*1000]
 
@@ -210,11 +211,11 @@ def seconds_to_timecode(seconds):
 
 
 # This is like REALLY STINKY and DESPERATELY needs to be refactored... but i don't wanna right now
-def load_video(video_path):
+def load_video(video_path, progress_hook=None, callback=None):
 	global subs, subs_adjusted, current_audio, total_duration, current_file
 	sub_path = ""
 	if video_path.startswith("http"):
-		video_path, sub_path = download_video(video_path)
+		video_path, sub_path = download_video(video_path, progress_hook, callback)
 	current_file = video_path
 	subs = subs_adjusted = load_subs(sub_path or video_path, get_output_path(current_file, '.srt'))
 	current_audio = AudioSegment.from_file(video_path)

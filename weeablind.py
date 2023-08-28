@@ -7,6 +7,7 @@ from pydub.playback import play
 from tabs.ConfigureVoiceTab import ConfigureVoiceTab
 from tabs.DiarizationTab import DiarizationTab
 import threading
+import json
 
 app = wx.App(False)
 frame = wx.Frame(None, wx.ID_ANY, "WeeaBlind", size=(800, 800))
@@ -76,7 +77,16 @@ class GUI(wx.Panel):
 			dlg.Destroy()
 
 	def load_video(self, video_path):
-		synth.load_video(video_path)
+		if video_path.startswith("http"):
+			dialog = wx.ProgressDialog("Downloading Vidoe", "download starting", 100, self)
+			def update_progress(progress):
+				status = progress['status']
+				if status == "downloading" and progress["total_bytes"]:
+					percent_complete = int(100*(progress["downloaded_bytes"] / progress["total_bytes"]))
+					wx.CallAfter(dialog.Update, percent_complete, f"{status}: {percent_complete}% \n {progress['info_dict']['fulltitle'] or ''}")
+			threading.Thread(target=synth.load_video, args=(video_path, update_progress, lambda: wx.CallAfter(dialog.Destroy))).start()
+		else:
+			synth.load_video(video_path)
 		self.txt_main_file.Value = synth.current_file
 		self.txt_start.SetValue(synth.seconds_to_timecode(synth.start_time))
 		self.txt_end.SetValue(synth.seconds_to_timecode(synth.end_time))
@@ -114,7 +124,6 @@ class GUI(wx.Panel):
 
 		dub_thread = threading.Thread(target=synth.run_dubbing, args=(update_progress,))
 		dub_thread.start()
-
 
 gui = GUI(frame)
 frame.Show()

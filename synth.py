@@ -80,29 +80,33 @@ def find_nearest_speaker(sub):
 		)
 	][0]
 
-def run_dubbing():
+def run_dubbing(progress_hook=None):
 	global dub_track
 	total_errors = 0
 	operation_start_time = time.process_time()
 	empty_audio = AudioSegment.silent(total_duration * 1000, frame_rate=22050)
-	with concurrent.futures.ProcessPoolExecutor(max_workers=4) as pool:
-		tasks = [pool.submit(dub_task, sub, i) for i, sub in enumerate(subs_adjusted)]		
-		for future in concurrent.futures.as_completed(tasks):
-			print(future)
-	# for i, sub in enumerate(subs_adjusted):
-	# 	print(f"{i}/{len(subs_adjusted)}")
-	# 	try:
-	# 		line = dub_line_ram(sub)
-	# 		empty_audio = empty_audio.overlay(line, sub.start*1000) 
-	# 	except Exception as e:
-	# 		print(e)
-	# 		total_errors += 1
-
-	# dub_track = empty_audio.export(get_output_path(current_file, '-dubtrack.wav'), format="wav")
-	# mix_av(mixing_ratio=4)
+	status = ""
+	# with concurrent.futures.ThreadPoolExecutor(max_workers=100) as pool:
+	# 	tasks = [pool.submit(dub_task, sub, i) for i, sub in enumerate(subs_adjusted)]		
+	# 	for future in concurrent.futures.as_completed(tasks):
+	# 		pass
+	for i, sub in enumerate(subs_adjusted):
+		status = f"{i}/{len(subs_adjusted)}"
+		try:
+			line = dub_line_ram(sub)
+			empty_audio = empty_audio.overlay(line, sub.start*1000)
+		except Exception as e:
+			print(e)
+			total_errors += 1
+		progress_hook(i, f"{status}: {sub.text}")
+	dub_track = empty_audio.export(get_output_path(current_file, '-dubtrack.wav'), format="wav")
+	progress_hook(i+1, "Mixing New Audio")
+	mix_av(mixing_ratio=4)
+	progress_hook(-1)
 	print(f"TOTAL TIME TAKEN: {time.process_time() - operation_start_time}")
 	# print(total_errors)
 
+# This function was intended to run with multiprocessing, but Coqui won't play nice with that.
 def dub_task(sub, i):
 	print(f"{i}/{len(subs_adjusted)}")
 	try:
@@ -207,12 +211,12 @@ def seconds_to_timecode(seconds):
 
 # This is like REALLY STINKY and DESPERATELY needs to be refactored... but i don't wanna right now
 def load_video(video_path):
-	global subs, current_audio, total_duration, current_file
+	global subs, subs_adjusted, current_audio, total_duration, current_file
 	sub_path = ""
 	if video_path.startswith("http"):
 		video_path, sub_path = download_video(video_path)
 	current_file = video_path
-	subs = load_subs(sub_path or video_path)
+	subs = subs_adjusted = load_subs(sub_path or video_path, get_output_path(current_file, '.srt'))
 	current_audio = AudioSegment.from_file(video_path)
 	total_duration = float(ffmpeg.probe(video_path)["format"]["duration"])
 	time_change(0, total_duration)
@@ -243,7 +247,7 @@ def crop_audio(file):
 
 def dub_line_ram(sub, output=True):
 	output_path = get_output_path(str(sub.index), '.wav', 'files/')
-	tts_audio = speakers[sub.voice].speak(sub.text, None)
+	tts_audio = speakers[sub.voice].speak(sub.text)
 	rate_adjusted = match_rate_ram(tts_audio, sub.end-sub.start)
 	data = rate_adjusted / np.max(np.abs(rate_adjusted))
 	audio_as_int = (data * (2**15)).astype(np.int16).tobytes()
@@ -321,9 +325,8 @@ speakers[0].set_voice_params('tts_models/en/vctk/vits', 'p326') # p340
 currentSpeaker = speakers[0]
 sampleSpeaker = currentSpeaker
 
-load_video("https://www.youtube.com/watch?v=2rtt6MLvFmc")
+# load_video("https://www.youtube.com/watch?v=2rtt6MLvFmc")
 # time_change(test_start_time, test_end_time)
 # run_diarization()
-run_dubbing()
+# run_dubbing()
 
-# dub_line_ram(0, subs_adjusted[5])

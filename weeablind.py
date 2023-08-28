@@ -6,6 +6,7 @@ from pydub import AudioSegment
 from pydub.playback import play
 from tabs.ConfigureVoiceTab import ConfigureVoiceTab
 from tabs.DiarizationTab import DiarizationTab
+import threading
 
 app = wx.App(False)
 frame = wx.Frame(None, wx.ID_ANY, "WeeaBlind", size=(800, 800))
@@ -98,7 +99,22 @@ class GUI(wx.Panel):
 		self.tab_voice_config.update_voice_fields(event)
 
 	def run_dub(self, event):
-		synth.run_dubbing()
+		progress_dialog = wx.ProgressDialog(
+			"Dubbing Progress",
+			"Starting...",
+			maximum=len(synth.subs_adjusted) + 1,  # +1 for combining phase
+			parent=self,
+			style=wx.PD_APP_MODAL | wx.PD_AUTO_HIDE
+		)
+		dub_thread = None
+		def update_progress(i, text=""):
+			if i == -1:
+				return wx.CallAfter(progress_dialog.Destroy)
+			wx.CallAfter(progress_dialog.Update, i, text)
+
+		dub_thread = threading.Thread(target=synth.run_dubbing, args=(update_progress,))
+		dub_thread.start()
+
 
 gui = GUI(frame)
 frame.Show()

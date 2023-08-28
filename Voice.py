@@ -85,12 +85,11 @@ class CoquiVoice(Voice):
 		self.is_multispeaker = False
 		self.speaker = None
 
-	def speak(self, text, file_path):
+	def speak(self, text, file_path=None):
 		if file_path:
 			return self.voice.tts_to_file(
 				text,
 				file_path=file_path,
-				
 				speaker=self.speaker,
 				language= 'en' if self.voice.is_multi_lingual else None
 			)

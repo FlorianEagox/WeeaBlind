@@ -165,7 +165,7 @@ def match_rate_ram(target, source_duration, outpath=None, clamp_min=0.8, clamp_m
 		rate_adjusted.close()
 		return outpath
 
-def download_video(link, progress_hook=None, callback=None):
+def download_video(link, progress_hook=None):
 	options = {
 		'outtmpl': 'output/download.%(ext)s',
 		'writesubtitles': True,
@@ -174,7 +174,6 @@ def download_video(link, progress_hook=None, callback=None):
 	}
 	with YoutubeDL(options) as ydl:
 		info = ydl.extract_info(link)
-		callback()
 		return ydl.prepare_filename(info), list(info["subtitles"].values())[0][-1]["filepath"]
 	
 def get_snippet(start, end):
@@ -215,12 +214,13 @@ def load_video(video_path, progress_hook=None, callback=None):
 	global subs, subs_adjusted, current_audio, total_duration, current_file
 	sub_path = ""
 	if video_path.startswith("http"):
-		video_path, sub_path = download_video(video_path, progress_hook, callback)
+		video_path, sub_path = download_video(video_path, progress_hook)
 	current_file = video_path
 	subs = subs_adjusted = load_subs(sub_path or video_path, get_output_path(current_file, '.srt'))
 	current_audio = AudioSegment.from_file(video_path)
 	total_duration = float(ffmpeg.probe(video_path)["format"]["duration"])
 	time_change(0, total_duration)
+	if callback: callback()
 
 def time_change(start, end):
 	global start_time, end_time, subs_adjusted
@@ -309,16 +309,17 @@ def isnt_target_language(target="./output/video_snippet.wav", exclusion="English
 	prediction = language_id.classify_batch(signal)
 	return prediction[3][0].split(' ')[1] != exclusion
 
-def find_multilingual_subtiles():
+def filter_multilingual_subtiles(progress_hook=None):
 	global subs_adjusted
 	operation_start_time = time.process_time()
 	multi_lingual_subs = []
 	for i, sub in enumerate(subs_adjusted):
-		print(f"{i}/{len(subs_adjusted)}")
+		progress_hook(i, f"{i}/{len(subs_adjusted)}: {sub.text}")
 		snippet = get_snippet(sub.start, sub.end).export(get_output_path('video_snippet', '.wav'), format="wav")
 		if isnt_target_language("output/video_snippet.wav"):
 			multi_lingual_subs.append(sub)
 	subs_adjusted = multi_lingual_subs
+	progress_hook(-1, "done")
 	print(f"TOTAL TIME TAKEN: {time.process_time() - operation_start_time}")
 
 speakers = [Voice.Voice(Voice.Voice.VoiceType.COQUI, name="Sample")]

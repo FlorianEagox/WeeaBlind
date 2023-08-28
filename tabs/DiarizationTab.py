@@ -4,6 +4,7 @@ from pydub import AudioSegment
 from pydub import AudioSegment
 import synth
 import wx
+import threading
 
 class DiarizationEntry(wx.Panel):
 	def __init__(self, parent, context, sub):
@@ -53,8 +54,6 @@ class DiarizationTab(wx.Panel):
 		self.scroll_panel.SetSizer(self.scroll_sizer)
 		self.scroll_panel.SetScrollRate(0, 20)
 
-		# self.create_entries()
-
 		main_sizer = wx.BoxSizer(wx.VERTICAL)
 		main_sizer.Add(btn_language_filter, 0, wx.CENTER)
 		main_sizer.Add(btn_diarize, 0, wx.CENTER)
@@ -68,14 +67,22 @@ class DiarizationTab(wx.Panel):
 		self.context.update_voices_list()
 	
 	def filter_language(self, event):
-		synth.find_multilingual_subtiles()
-		self.create_entries()
-		self.context.update_voices_list()
+		dialog = wx.ProgressDialog("Filtering Subtitles", "starting", len(synth.subs_adjusted), self)
+		def update_progress(progress, status):
+			def run_after():
+				self.create_entries()
+				self.context.update_voices_list()
+				dialog.Destroy()
+			if progress == -1:
+				return wx.CallAfter(run_after)
+			else:
+				wx.CallAfter(dialog.Update, progress, status)
+		threading.Thread(target=synth.filter_multilingual_subtiles, args=(update_progress,)).start()
+
 
 	def create_entries(self):
 		self.scroll_sizer.Clear(delete_windows=True)
-		rttm_data = synth.subs_adjusted
-		for entry in rttm_data:
+		for sub in synth.subs_adjusted:
 			# diarization_entry = DiarizationEntry(
 			# 	self.scroll_panel,
 			# 	start_time=entry[1],
@@ -86,7 +93,7 @@ class DiarizationTab(wx.Panel):
 			diarization_entry = DiarizationEntry(
 				self.scroll_panel,
 				context=self.context,
-				sub=entry
+				sub=sub
 			)
 			self.scroll_sizer.Add(diarization_entry, 0, wx.EXPAND | wx.ALL, border=5)
 

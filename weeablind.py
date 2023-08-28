@@ -77,6 +77,11 @@ class GUI(wx.Panel):
 			dlg.Destroy()
 
 	def load_video(self, video_path):
+		def update_ui():
+			self.txt_main_file.Value = synth.current_file
+			self.txt_start.SetValue(synth.seconds_to_timecode(synth.start_time))
+			self.txt_end.SetValue(synth.seconds_to_timecode(synth.end_time))
+			self.tab_diarization.create_entries()
 		if video_path.startswith("http"):
 			dialog = wx.ProgressDialog("Downloading Vidoe", "download starting", 100, self)
 			def update_progress(progress):
@@ -84,13 +89,15 @@ class GUI(wx.Panel):
 				if status == "downloading" and progress["total_bytes"]:
 					percent_complete = int(100*(progress["downloaded_bytes"] / progress["total_bytes"]))
 					wx.CallAfter(dialog.Update, percent_complete, f"{status}: {percent_complete}% \n {progress['info_dict']['fulltitle'] or ''}")
-			threading.Thread(target=synth.load_video, args=(video_path, update_progress, lambda: wx.CallAfter(dialog.Destroy))).start()
+			def download_finished():
+				wx.CallAfter(dialog.Destroy)
+				wx.CallAfter(update_ui)
+			download_thread = threading.Thread(target=synth.load_video, args=(video_path, update_progress, download_finished))
+			download_thread.start()
 		else:
 			synth.load_video(video_path)
-		self.txt_main_file.Value = synth.current_file
-		self.txt_start.SetValue(synth.seconds_to_timecode(synth.start_time))
-		self.txt_end.SetValue(synth.seconds_to_timecode(synth.end_time))
-		self.tab_diarization.create_entries()
+			update_ui()
+		
 
 	def change_crop_time(self, event):
 		synth.time_change(

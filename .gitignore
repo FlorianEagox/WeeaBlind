@@ -9,3 +9,6 @@ output/
 *.webm
 pretrained_models
 tmp
+dist
+build
+*.spec

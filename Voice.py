@@ -108,7 +108,7 @@ class CoquiVoice(Voice):
 		self.speaker = speaker
 
 	def list_voice_options(self):	
-		return [item for item in TTS.list_models() if '/en/' in item or 'multi' in item]
+		return [item for item in TTS().list_models() if '/en/' in item or 'multi' in item]
 
 	def is_model_downloaded(self, model_name):
 		return os.path.exists(os.path.join(self.voice.manager.output_prefix, self.voice.manager._set_model_item(model_name)[1]))

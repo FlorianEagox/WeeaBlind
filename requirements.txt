@@ -1,11 +1,12 @@
 tts
-pyannote.audio
+-f https://github.com/pyannote/pyannote-audio/archive/refs/heads/develop.zip
 ffmpeg-python
 srt
-ass
 py-espeak-ng
 pydub
+-f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-22.04
 wxpython
 pyttsx3
 yt-dlp
 audiotsm
+speechbrain

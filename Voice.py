@@ -12,7 +12,7 @@ class Voice(abc.ABC):
 	class VoiceType(Enum):
 		ESPEAK = "ESpeak"
 		COQUI = "Coqui TTS"
-		SAPI5 = "Microsoft SAPI5"
+		SAPI5 = "System Voices"
 
 	def __new__(cls, voice_type, init_args=[], name="Unnamed"):
 		if cls is Voice:
@@ -119,7 +119,7 @@ class CoquiVoice(Voice):
 class SAPI5Voice(Voice):
 	def __init__(self, init_args=[], name="Unnamed"):
 		super().__init__(Voice.VoiceType.SAPI5, init_args, name)
-		self.voice = pyttsx3.init(*init_args)
+		self.voice = pyttsx3.init()
 		self.voice_option = self.voice.getProperty('voice')
 
 	def speak(self, text, file_name):
@@ -132,8 +132,8 @@ class SAPI5Voice(Voice):
 
 	def set_voice_params(self, voice=None, pitch=None):
 		if voice:
-			self.voice_option = self.voice.getProperty('voice')
 			self.voice.setProperty('voice', voice)
+			self.voice_option = self.voice.getProperty('voice')
 
 	def list_voice_options(self):
 		return [voice.name for voice in self.voice.getProperty('voices')]

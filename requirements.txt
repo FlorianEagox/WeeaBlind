@@ -1,5 +1,5 @@
 tts
--f https://github.com/pyannote/pyannote-audio/archive/refs/heads/develop.zip
+https://github.com/pyannote/pyannote-audio/archive/refs/heads/develop.zip
 ffmpeg-python
 srt
 py-espeak-ng

@@ -26,7 +26,7 @@ def load_subs(import_path=False, export=""):
 			.global_args('-loglevel', 'error')
 			.run(overwrite_output=True)
 		)
-	with open(export, "r") as f:
+	with open(export, "r", encoding="utf-8") as f:
 		original_subs = list(srt.parse(f.read()))
 		return [
 			DubbedLine(

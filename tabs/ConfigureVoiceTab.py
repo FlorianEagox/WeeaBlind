@@ -63,7 +63,10 @@ class ConfigureVoiceTab(wx.Panel):
 		self.txt_voice_name.Value = synth.sampleSpeaker.name
 		self.cb_voice_types.Select(list(Voice.VoiceType.__members__.values()).index(synth.sampleSpeaker.voice_type))
 		self.cb_voice_options.Set(synth.sampleSpeaker.list_voice_options())
-		self.cb_voice_options.Select(synth.sampleSpeaker.list_voice_options().index(synth.sampleSpeaker.voice_option))
+		try:
+			self.cb_voice_options.Select(synth.sampleSpeaker.list_voice_options().index(synth.sampleSpeaker.voice_option))
+		except:
+			self.cb_voice_options.Select(0)
 		self.show_multispeaker()
 
 	def change_voice_type(self, event):
@@ -90,6 +93,6 @@ class ConfigureVoiceTab(wx.Panel):
 		if synth.sampleSpeaker.voice_type == Voice.VoiceType.COQUI and synth.sampleSpeaker.is_multispeaker:
 			synth.sampleSpeaker.set_voice_params(speaker=self.cb_speaker_voices.GetStringSelection())
 		else:
-			synth.sampleSpeaker.set_voice_params(speaker=None)
+			synth.sampleSpeaker.set_voice_params(speaker=self.cb_speaker_voices.GetStringSelection())
 		self.show_multispeaker()
 		self.SetCursor(wx.Cursor(wx.CURSOR_DEFAULT))

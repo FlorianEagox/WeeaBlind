@@ -12,3 +12,4 @@ tmp
 dist
 build
 *.spec
+audio_cache

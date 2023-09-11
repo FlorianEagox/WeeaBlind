@@ -34,9 +34,11 @@ I had the idea to call the software Weeablind as a portmanteaux of Weeaboo (some
 - Use OCR for non-text based subtitles
 - Make a cool logo?
 - Learn how to package python programs as binaries to make releases
-- Remove the copyrighted content from this repo (sorry not sorry TV Tokyo)
+- ~~Remove the copyrighted content from this repo (sorry not sorry TV Tokyo)~~
 - Save and import config files for later
-- Support for all subtitle formats
+- ~~Support for all subtitle formats~~
+- Maybe slap in an ASR library for videos without subtitles?
+- Maybe support for magnet URLs or the arrLib to pirate media (who knows???)
 
 ### Diarization
 

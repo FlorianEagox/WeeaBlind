@@ -7,11 +7,7 @@ from pydub.playback import play
 from tabs.ConfigureVoiceTab import ConfigureVoiceTab
 from tabs.DiarizationTab import DiarizationTab
 import threading
-import json
-
-app = wx.App(False)
-frame = wx.Frame(None, wx.ID_ANY, "WeeaBlind", size=(800, 800))
-frame.Center()
+import utils
 
 class GUI(wx.Panel):
 	def __init__(self, parent):
@@ -132,6 +128,12 @@ class GUI(wx.Panel):
 		dub_thread = threading.Thread(target=synth.run_dubbing, args=(update_progress,))
 		dub_thread.start()
 
-gui = GUI(frame)
-frame.Show()
-app.MainLoop()
+if __name__ == '__main__':
+	utils.create_output_dir()
+
+	app = wx.App(False)
+	frame = wx.Frame(None, wx.ID_ANY, utils.APP_NAME, size=(800, 800))
+	frame.Center()
+	gui = GUI(frame)
+	frame.Show()
+	app.MainLoop()

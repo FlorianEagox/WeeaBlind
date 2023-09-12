@@ -63,3 +63,22 @@ class Video:
 			.run(overwrite_output=True)
 		)
 		return output
+
+	# This runs an ffmpeg command to combine the audio, video, and subtitles with a specific ratio of how loud to make the dubtrack
+	def mix_av(self, mixing_ratio=6, dubtrack=None, output_path=None):
+		# i hate python, plz let me use self in func def
+		if not dubtrack: dubtrack = utils.get_output_path(self.file, '-dubtrack.wav')
+		if not output_path: output_path = utils.get_output_path(self.file, '-dubbed.mkv')
+
+		input_video = ffmpeg.input(self.file)
+		input_audio = input_video.audio
+		input_wav = ffmpeg.input(dubtrack).audio
+
+		mixed_audio = ffmpeg.filter([input_audio, input_wav], 'amix', duration='first', weights=f"1 {mixing_ratio}")
+
+		output = (
+			# input_video['s']
+			ffmpeg.output(input_video['v'], mixed_audio, output_path, vcodec="copy", acodec="aac")
+			.global_args('-shortest')
+		)
+		ffmpeg.run(output, overwrite_output=True)

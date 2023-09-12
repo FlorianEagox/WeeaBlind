@@ -8,7 +8,7 @@
             "name": "Python: main file",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/synth.py",
+            "program": "${workspaceFolder}/weeablind.py",
             "console": "integratedTerminal",
             "justMyCode": true,
             "subProcess": true

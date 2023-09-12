@@ -1,6 +1,7 @@
-import synth
+import app_state
 import wx
 from Voice import Voice
+import utils
 
 class ConfigureVoiceTab(wx.Panel):
 	def __init__(self, notebook, parent):
@@ -8,10 +9,10 @@ class ConfigureVoiceTab(wx.Panel):
 		self.parent = parent
 		# EDIT VOICE PARAMS
 		lbl_voice_name = wx.StaticText(self, label="Name")
-		self.txt_voice_name = wx.TextCtrl(self, value=synth.currentSpeaker.name)
+		self.txt_voice_name = wx.TextCtrl(self, value=app_state.current_speaker.name)
 		self.cb_voice_types = wx.ComboBox(self, style= wx.CB_READONLY, choices=[str(val) for val in Voice.VoiceType])
 		self.cb_voice_types.Bind(wx.EVT_COMBOBOX, self.change_voice_type)
-		self.cb_voice_options = wx.ComboBox(self, style= wx.CB_READONLY, choices=synth.currentSpeaker.list_voice_options())
+		self.cb_voice_options = wx.ComboBox(self, style= wx.CB_READONLY, choices=app_state.current_speaker.list_voice_options())
 		self.cb_voice_options.Bind(wx.EVT_COMBOBOX, self.change_voice_params)
 
 		# Show a dropdown box for multi-speaker Coqui models
@@ -41,44 +42,44 @@ class ConfigureVoiceTab(wx.Panel):
 
 
 	def sample(self, event):
-		synth.sampleVoice(self.txt_sample_synth.Value)
+		utils.sampleVoice(self.txt_sample_synth.Value)
 
 	def update_voice(self, event):
-		synth.sampleSpeaker.name = self.txt_voice_name.Value
-		synth.speakers[synth.speakers.index(synth.currentSpeaker)] = synth.sampleSpeaker
-		synth.currentSpeaker = synth.sampleSpeaker
+		app_state.sample_speaker.name = self.txt_voice_name.Value
+		app_state.speakers[app_state.speakers.index(app_state.current_speaker)] = app_state.sample_speaker
+		app_state.current_speaker = app_state.sample_speaker
 		self.parent.update_voices_list()
 
 	def show_multispeaker(self):
-		if synth.sampleSpeaker.voice_type == Voice.VoiceType.COQUI and synth.sampleSpeaker.is_multispeaker:
+		if app_state.sample_speaker.voice_type == Voice.VoiceType.COQUI and app_state.sample_speaker.is_multispeaker:
 			self.cb_speaker_voices.Show()
-			self.cb_speaker_voices.Set(synth.sampleSpeaker.list_speakers())
-			if synth.sampleSpeaker.speaker:
-				self.cb_speaker_voices.SetValue(synth.sampleSpeaker.speaker)
+			self.cb_speaker_voices.Set(app_state.sample_speaker.list_speakers())
+			if app_state.sample_speaker.speaker:
+				self.cb_speaker_voices.SetValue(app_state.sample_speaker.speaker)
 		else:
 			self.cb_speaker_voices.Hide()
 		self.Layout()
 
 	def update_voice_fields(self, event):
-		self.txt_voice_name.Value = synth.sampleSpeaker.name
-		self.cb_voice_types.Select(list(Voice.VoiceType.__members__.values()).index(synth.sampleSpeaker.voice_type))
-		self.cb_voice_options.Set(synth.sampleSpeaker.list_voice_options())
+		self.txt_voice_name.Value = app_state.sample_speaker.name
+		self.cb_voice_types.Select(list(Voice.VoiceType.__members__.values()).index(app_state.sample_speaker.voice_type))
+		self.cb_voice_options.Set(app_state.sample_speaker.list_voice_options())
 		try:
-			self.cb_voice_options.Select(synth.sampleSpeaker.list_voice_options().index(synth.sampleSpeaker.voice_option))
+			self.cb_voice_options.Select(app_state.sample_speaker.list_voice_options().index(app_state.sample_speaker.voice_option))
 		except:
 			self.cb_voice_options.Select(0)
 		self.show_multispeaker()
 
 	def change_voice_type(self, event):
-		synth.sampleSpeaker = Voice(list(Voice.VoiceType.__members__.values())[self.cb_voice_types.GetSelection()])
+		app_state.sample_speaker = Voice(list(Voice.VoiceType.__members__.values())[self.cb_voice_types.GetSelection()])
 		self.update_voice_fields(event)
 
 	def change_voice_params(self, event):
 		self.SetCursor(wx.Cursor(wx.CURSOR_WAIT))
 		self.Layout()
 		option_name = self.cb_voice_options.GetStringSelection()
-		if synth.sampleSpeaker.voice_type == Voice.VoiceType.COQUI:
-			if not synth.sampleSpeaker.is_model_downloaded(option_name):
+		if app_state.sample_speaker.voice_type == Voice.VoiceType.COQUI:
+			if not app_state.sample_speaker.is_model_downloaded(option_name):
 				message_download = wx.MessageDialog(
 					None,
 					f"You do not have\n{option_name}\n downloaded. Would you like to download it? It could take a long time and lots of storage",
@@ -88,11 +89,11 @@ class ConfigureVoiceTab(wx.Panel):
 				if(message_download != wx.ID_OK):
 					return
 		
-		synth.sampleSpeaker.set_voice_params(voice=option_name)
+		app_state.sample_speaker.set_voice_params(voice=option_name)
 
-		if synth.sampleSpeaker.voice_type == Voice.VoiceType.COQUI and synth.sampleSpeaker.is_multispeaker:
-			synth.sampleSpeaker.set_voice_params(speaker=self.cb_speaker_voices.GetStringSelection())
+		if app_state.sample_speaker.voice_type == Voice.VoiceType.COQUI and app_state.sample_speaker.is_multispeaker:
+			app_state.sample_speaker.set_voice_params(speaker=self.cb_speaker_voices.GetStringSelection())
 		else:
-			synth.sampleSpeaker.set_voice_params(speaker=self.cb_speaker_voices.GetStringSelection())
+			app_state.sample_speaker.set_voice_params(speaker=self.cb_speaker_voices.GetStringSelection())
 		self.show_multispeaker()
 		self.SetCursor(wx.Cursor(wx.CURSOR_DEFAULT))

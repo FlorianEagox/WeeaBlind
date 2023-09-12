@@ -2,9 +2,14 @@ import os.path
 import numpy as np
 from pydub.playback import play
 from pydub import AudioSegment
+from torch.cuda import is_available
 
 APP_NAME = "WeeaBlind"
+test_video_name = "./output/download.webm"
 default_sample_path = "./output/sample.wav"
+test_start_time = 94
+test_end_time =  1324
+gpu_detected = is_available()
 
 def create_output_dir():
 	path = './output/files'
@@ -43,3 +48,4 @@ def find_nearest(array, value):
 
 def sampleVoice(text, speaker, output=default_sample_path):
 	play(AudioSegment.from_file(speaker.speak(text, output)))
+

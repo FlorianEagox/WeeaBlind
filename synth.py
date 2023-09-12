@@ -4,23 +4,17 @@ import ffmpeg
 import numpy as np
 import Voice
 from pydub import AudioSegment
-from audiotsm import wsola
-from audiotsm.io.wav import WavReader, WavWriter
-from audiotsm.io.array import ArrayReader, ArrayWriter
-from yt_dlp import YoutubeDL
 from pyannote.audio import Pipeline
 import time
 import concurrent.futures
-from speechbrain.pretrained import EncoderClassifier
+
 from dub_line import load_subs
 import random
 import torchaudio
 import torchaudio.transforms as T
 from utils import get_output_path, find_nearest
+import utils
 
-test_video_name = "./output/download.webm"
-test_start_time = 94
-test_end_time =  1324
 speech_diary = speech_diary_adjusted = []
 # pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization@2.1", use_auth_token="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")
 
@@ -155,21 +149,6 @@ def run_diarization():
 	for sub in subs_adjusted:
 		sub.voice = find_nearest_speaker(sub)
 
-
-def mix_av(video_path=current_file, wav_path=get_output_path(current_file, '-dubtrack.wav'), mixing_ratio=6, output_path=get_output_path(current_file, '-dubbed.mkv')):
-	input_video = ffmpeg.input(video_path)
-	input_audio = input_video.audio
-	input_wav = ffmpeg.input(wav_path).audio
-
-	mixed_audio = ffmpeg.filter([input_audio, input_wav], 'amix', duration='first', weights=f"1 {mixing_ratio}")
-
-	output = (
-		# input_video['s']
-		ffmpeg.output(input_video['v'], mixed_audio, output_path, vcodec="copy", acodec="aac")
-		.global_args('-shortest')
-	)
-	ffmpeg.run(output, overwrite_output=True)
-
 def filter_multilingual_subtiles(progress_hook=None):
 	global subs_adjusted
 	operation_start_time = time.process_time()
@@ -183,8 +162,8 @@ def filter_multilingual_subtiles(progress_hook=None):
 	progress_hook(-1, "done")
 	print(f"TOTAL TIME TAKEN: {time.process_time() - operation_start_time}")
 
-speakers = [Voice.Voice(Voice.Voice.VoiceType.COQUI, name="Sample")]
-speakers[0].set_voice_params('tts_models/en/vctk/vits', 'p326') # p340
+speakers = [Voice.Voice(Voice.Voice.VoiceType.SAPI5, name="Sample")]
+# speakers[0].set_voice_params('tts_models/en/vctk/vits', 'p326') # p340
 currentSpeaker = speakers[0]
 sampleSpeaker = currentSpeaker
 

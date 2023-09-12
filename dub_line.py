@@ -5,6 +5,10 @@ import ffmpeg
 import srt
 from re import compile, sub as substitute
 from audiotsm import wsola
+from audiotsm.io.wav import WavReader, WavWriter
+from audiotsm.io.array import ArrayReader, ArrayWriter
+from speechbrain.pretrained import EncoderClassifier
+import numpy as np
 
 remove_xml = compile(r'<[^>]+>|\{[^}]+\}')
 

@@ -1,13 +1,14 @@
 import wx
 import synth
 from Voice import Voice
-from torch.cuda import is_available
 from pydub import AudioSegment
 from pydub.playback import play
 from tabs.ConfigureVoiceTab import ConfigureVoiceTab
 from tabs.DiarizationTab import DiarizationTab
 import threading
 import utils
+from video import Video
+import app_state
 
 class GUI(wx.Panel):
 	def __init__(self, parent):
@@ -16,25 +17,25 @@ class GUI(wx.Panel):
 		btn_choose_file = wx.Button(self, label="Choose FIle")
 		btn_choose_file.Bind(wx.EVT_BUTTON, self.open_file)
 
-		self.txt_main_file = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER, value=synth.test_video_name)
+		self.txt_main_file = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER, value=utils.test_video_name)
 		self.txt_main_file.Bind(wx.EVT_TEXT_ENTER, lambda event: self.load_video(self.txt_main_file.Value))
 		lbl_title = wx.StaticText(self, label="WeeaBlind")
 
-		lbl_GPU = wx.StaticText(self, label=f"GPU Detected? {is_available()}")
-		lbl_GPU.SetForegroundColour((0, 255, 0) if is_available() else (255, 0, 0))
+		lbl_GPU = wx.StaticText(self, label=f"GPU Detected? {utils.gpu_detected}")
+		lbl_GPU.SetForegroundColour((0, 255, 0) if utils.gpu_detected else (255, 0, 0))
 
 		self.chk_match_volume = wx.CheckBox(self, label="Match Speaker Volume")
 		self.chk_match_volume.SetValue(True)
 		
-		self.txt_start = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER, value=synth.seconds_to_timecode(synth.start_time))
-		self.txt_end   = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER, value=synth.seconds_to_timecode(synth.end_time))
+		self.txt_start = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER, value=utils.seconds_to_timecode(0))
+		self.txt_end   = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER, value=utils.seconds_to_timecode(0))
 		self.txt_start.Bind(wx.EVT_TEXT_ENTER, self.change_crop_time)
 		self.txt_end.Bind(wx.EVT_TEXT_ENTER, self.change_crop_time)
 
 		self.chk_multilangual = wx.CheckBox(self)
 
 		# SHOW A LIST OF VOICES
-		self.lb_voices = wx.ListBox(self, choices=[speaker.name for speaker in synth.speakers])
+		self.lb_voices = wx.ListBox(self, choices=[speaker.name for speaker in app_state.speakers])
 		self.lb_voices.Bind(wx.EVT_LISTBOX, self.on_voice_change)
 		self.lb_voices.Select(0)
 
@@ -63,20 +64,20 @@ class GUI(wx.Panel):
 		self.SetSizer(sizer)
 
 	def open_file(self, evenet):
-			dlg = wx.FileDialog(
-				frame, message="Choose a file",
-				wildcard="*.*",
-				style=wx.FD_OPEN | wx.FD_CHANGE_DIR
-			)
-			if dlg.ShowModal() == wx.ID_OK:
-				self.load_video(dlg.GetPath())
-			dlg.Destroy()
+		dlg = wx.FileDialog(
+			frame, message="Choose a file",
+			wildcard="*.*",
+			style=wx.FD_OPEN | wx.FD_CHANGE_DIR
+		)
+		if dlg.ShowModal() == wx.ID_OK:
+			self.load_video(dlg.GetPath())
+		dlg.Destroy()
 
 	def load_video(self, video_path):
 		def update_ui():
-			self.txt_main_file.Value = synth.current_file
-			self.txt_start.SetValue(synth.seconds_to_timecode(synth.start_time))
-			self.txt_end.SetValue(synth.seconds_to_timecode(synth.end_time))
+			self.txt_main_file.Value = self.video.file
+			self.txt_start.SetValue(utils.seconds_to_timecode(self.video.start_time))
+			self.txt_end.SetValue(utils.seconds_to_timecode(self.video.end_time))
 			self.tab_diarization.create_entries()
 		if video_path.startswith("http"):
 			dialog = wx.ProgressDialog("Downloading Vidoe", "download starting", 100, self)
@@ -88,34 +89,34 @@ class GUI(wx.Panel):
 			def download_finished():
 				wx.CallAfter(dialog.Destroy)
 				wx.CallAfter(update_ui)
-			download_thread = threading.Thread(target=synth.load_video, args=(video_path, update_progress, download_finished))
+			download_thread = threading.Thread(target=Video, args=(video_path, update_progress, download_finished))
 			download_thread.start()
 		else:
-			synth.load_video(video_path)
+			app_state.video = Video(video_path)
 			update_ui()
 		
 
 	def change_crop_time(self, event):
-		synth.time_change(
-			synth.timecode_to_seconds(self.txt_start.Value),
-			synth.timecode_to_seconds(self.txt_end.Value)
+		app_state.video.time_change(
+			utils.timecode_to_seconds(self.txt_start.Value),
+			utils.timecode_to_seconds(self.txt_end.Value)
 		)
 		self.tab_diarization.create_entries()
 
 	def update_voices_list(self):
-		self.lb_voices.Set([speaker.name for speaker in synth.speakers])
-		self.lb_voices.Select(self.lb_voices.Strings.index(synth.currentSpeaker.name))
+		self.lb_voices.Set([speaker.name for speaker in app_state.speakers])
+		self.lb_voices.Select(self.lb_voices.Strings.index(app_state.currentSpeaker.name))
 
 	def on_voice_change(self, event):
-		synth.currentSpeaker = synth.speakers[self.lb_voices.GetSelection()]
-		synth.sampleSpeaker = synth.currentSpeaker
+		app_state.current_speaker = app_state.speakers[self.lb_voices.GetSelection()]
+		app_state.sample_speaker = app_state.current_speaker
 		self.tab_voice_config.update_voice_fields(event)
 
 	def run_dub(self, event):
 		progress_dialog = wx.ProgressDialog(
 			"Dubbing Progress",
 			"Starting...",
-			maximum=len(synth.subs_adjusted) + 1,  # +1 for combining phase
+			maximum=len(app_state.video.subs_adjusted) + 1,  # +1 for combining phase
 			parent=self,
 			style=wx.PD_APP_MODAL | wx.PD_AUTO_HIDE
 		)
@@ -130,7 +131,6 @@ class GUI(wx.Panel):
 
 if __name__ == '__main__':
 	utils.create_output_dir()
-
 	app = wx.App(False)
 	frame = wx.Frame(None, wx.ID_ANY, utils.APP_NAME, size=(800, 800))
 	frame.Center()

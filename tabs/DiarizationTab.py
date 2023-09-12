@@ -1,7 +1,7 @@
 import synth
+import utils
+import app_state
 from pydub.playback import play
-from pydub import AudioSegment
-from pydub import AudioSegment
 import synth
 import wx
 import threading
@@ -17,7 +17,7 @@ class DiarizationEntry(wx.Panel):
 		self.duration = self.end_time - self.start_time
 		self.context = context
 		
-		entry_box = wx.StaticBox(self, label=f"{synth.seconds_to_timecode(self.start_time)} - {synth.seconds_to_timecode(self.end_time)}")
+		entry_box = wx.StaticBox(self, label=f"{utils.seconds_to_timecode(self.start_time)} - {utils.seconds_to_timecode(self.end_time)}")
 		entry_sizer = wx.StaticBoxSizer(entry_box, wx.VERTICAL)
 
 		text_label = wx.StaticText(self, label=f"Speaker: {self.speaker}\nText: {self.text}")
@@ -34,12 +34,11 @@ class DiarizationEntry(wx.Panel):
 		self.SetSizerAndFit(entry_sizer)
 
 	def on_playback_button_click(self, event):
-		play(synth.get_snippet(self.start_time, self.end_time))
+		play(app_state.video.get_snippet(self.start_time, self.end_time))
 		pass
 
 	def on_sample_button_click(self, event):
-		# sample = synth.dub_line_ram(synth.speakers[self.speaker].speak(self.text, 'output/sample.wav'), self.start_time, self.end_time, self.context.check_match_volume.GetValue())
-		play(synth.dub_line_ram(self.sub))
+		play(self.sub.dub_line_ram(self.sub))
 
 class DiarizationTab(wx.Panel):
 	def __init__(self, notebook, context):
@@ -82,7 +81,7 @@ class DiarizationTab(wx.Panel):
 
 	def create_entries(self):
 		self.scroll_sizer.Clear(delete_windows=True)
-		for sub in synth.subs_adjusted:
+		for sub in app_state.video.subs_adjusted:
 			# diarization_entry = DiarizationEntry(
 			# 	self.scroll_panel,
 			# 	start_time=entry[1],

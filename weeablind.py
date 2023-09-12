@@ -9,6 +9,7 @@ import threading
 import utils
 from video import Video
 import app_state
+from video import Video
 
 class GUI(wx.Panel):
 	def __init__(self, parent):
@@ -75,21 +76,25 @@ class GUI(wx.Panel):
 
 	def load_video(self, video_path):
 		def update_ui():
-			self.txt_main_file.Value = self.video.file
-			self.txt_start.SetValue(utils.seconds_to_timecode(self.video.start_time))
-			self.txt_end.SetValue(utils.seconds_to_timecode(self.video.end_time))
+			self.txt_main_file.Value = app_state.video.file
+			self.txt_start.SetValue(utils.seconds_to_timecode(app_state.video.start_time))
+			self.txt_end.SetValue(utils.seconds_to_timecode(app_state.video.end_time))
 			self.tab_diarization.create_entries()
 		if video_path.startswith("http"):
 			dialog = wx.ProgressDialog("Downloading Vidoe", "download starting", 100, self)
-			def update_progress(progress):
+			def update_progress(progress=None, finished=False):
+				if finished:
+					wx.CallAfter(dialog.Destroy)
+					wx.CallAfter(update_ui)
+					return
 				status = progress['status']
 				if status == "downloading" and progress["total_bytes"]:
 					percent_complete = int(100*(progress["downloaded_bytes"] / progress["total_bytes"]))
 					wx.CallAfter(dialog.Update, percent_complete, f"{status}: {percent_complete}% \n {progress['info_dict']['fulltitle'] or ''}")
-			def download_finished():
-				wx.CallAfter(dialog.Destroy)
-				wx.CallAfter(update_ui)
-			download_thread = threading.Thread(target=Video, args=(video_path, update_progress, download_finished))
+			
+			#python is stupid and won't let you do this as a lambda -_-
+			def initialize_video(): app_state.video = Video(video_path, update_progress)
+			download_thread = threading.Thread(target=initialize_video)
 			download_thread.start()
 		else:
 			app_state.video = Video(video_path)
@@ -105,7 +110,7 @@ class GUI(wx.Panel):
 
 	def update_voices_list(self):
 		self.lb_voices.Set([speaker.name for speaker in app_state.speakers])
-		self.lb_voices.Select(self.lb_voices.Strings.index(app_state.currentSpeaker.name))
+		self.lb_voices.Select(self.lb_voices.Strings.index(app_state.current_speaker.name))
 
 	def on_voice_change(self, event):
 		app_state.current_speaker = app_state.speakers[self.lb_voices.GetSelection()]

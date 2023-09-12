@@ -93,7 +93,6 @@ class ConfigureVoiceTab(wx.Panel):
 
 		if app_state.sample_speaker.voice_type == Voice.VoiceType.COQUI and app_state.sample_speaker.is_multispeaker:
 			app_state.sample_speaker.set_voice_params(speaker=self.cb_speaker_voices.GetStringSelection())
-		else:
-			app_state.sample_speaker.set_voice_params(speaker=self.cb_speaker_voices.GetStringSelection())
+
 		self.show_multispeaker()
 		self.SetCursor(wx.Cursor(wx.CURSOR_DEFAULT))

@@ -1,4 +1,5 @@
 import os.path
+from app_state import sample_speaker
 import numpy as np
 from pydub.playback import play
 from pydub import AudioSegment
@@ -46,6 +47,6 @@ def seconds_to_timecode(seconds):
 def find_nearest(array, value):
 	return (np.abs(np.asarray(array) - value)).argmin()
 
-def sampleVoice(text, speaker, output=default_sample_path):
-	play(AudioSegment.from_file(speaker.speak(text, output)))
+def sampleVoice(text, output=default_sample_path):
+	play(AudioSegment.from_file(sample_speaker.speak(text, output)))
 

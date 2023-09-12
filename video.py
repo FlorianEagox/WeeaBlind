@@ -10,7 +10,8 @@ from dub_line import load_subs
 
 class Video:
 	def __init__(self, video_URL, loading_progress_hook):
-		self.start_time, self.end_time = 0
+		self.start_time = self.end_time = 0
+		self.speech_diary = self.speech_diary_adjusted = None
 		self.load_video(video_URL, loading_progress_hook)
 
 	def load_video(self, video_path, progress_hook=None, callback=None):
@@ -22,7 +23,7 @@ class Video:
 		self.audio = AudioSegment.from_file(video_path)
 		self.total_duration = float(ffmpeg.probe(video_path)["format"]["duration"])
 		self.update_time(0, self.total_duration)
-		if callback: callback()
+		if progress_hook: progress_hook(finished=True)
 
 	def download_video(self, link, progress_hook=None):
 		options = {
@@ -51,12 +52,12 @@ class Video:
 	def get_snippet(self, start, end):
 		return self.audio[start*1000:end*1000]
 	
-	def crop_audio(file):
+	def crop_audio(self):
 		# ffmpeg -i .\saiki.mkv -vn -ss 84 -to 1325 crop.wav
-		output = get_output_path(file, "-crop.wav")
+		output = utils.get_output_path(self.file, "-crop.wav")
 		(
 			ffmpeg
-			.input(file, ss=start_time, to=end_time)
+			.input(self.file, ss=self.start_time, to=self.end_time)
 			.output(output)
 			.global_args('-loglevel', 'error')
 			.global_args('-vn')

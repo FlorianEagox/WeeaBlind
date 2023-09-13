@@ -3,7 +3,7 @@ from Voice import Voice
 from pydub import AudioSegment
 from pydub.playback import play
 from tabs.ConfigureVoiceTab import ConfigureVoiceTab
-from tabs.DiarizationTab import DiarizationTab
+from tabs.SubtitlesTab import SubtitlesTab
 import threading
 import utils
 from video import Video
@@ -42,8 +42,8 @@ class GUI(wx.Panel):
 		tab_control = wx.Notebook(self)
 		self.tab_voice_config = ConfigureVoiceTab(tab_control, self)
 		tab_control.AddPage(self.tab_voice_config, "Configure Voices")
-		self.tab_diarization = DiarizationTab(tab_control, self)
-		tab_control.AddPage(self.tab_diarization, "Diarization")
+		self.tab_subtitles = SubtitlesTab(tab_control, self)
+		tab_control.AddPage(self.tab_subtitles, "Subtitles")
 
 		btn_run_dub = wx.Button(self, label="Run Dubbing!")
 		btn_run_dub.Bind(wx.EVT_BUTTON, self.run_dub)
@@ -78,7 +78,7 @@ class GUI(wx.Panel):
 			self.txt_main_file.Value = app_state.video.file
 			self.txt_start.SetValue(utils.seconds_to_timecode(app_state.video.start_time))
 			self.txt_end.SetValue(utils.seconds_to_timecode(app_state.video.end_time))
-			self.tab_diarization.create_entries()
+			self.tab_subtitles.create_entries()
 		if video_path.startswith("http"):
 			dialog = wx.ProgressDialog("Downloading Vidoe", "download starting", 100, self)
 			def update_progress(progress=None, finished=False):
@@ -105,7 +105,7 @@ class GUI(wx.Panel):
 			utils.timecode_to_seconds(self.txt_start.Value),
 			utils.timecode_to_seconds(self.txt_end.Value)
 		)
-		self.tab_diarization.create_entries()
+		self.tab_subtitles.create_entries()
 
 	def update_voices_list(self):
 		self.lb_voices.Set([speaker.name for speaker in app_state.speakers])

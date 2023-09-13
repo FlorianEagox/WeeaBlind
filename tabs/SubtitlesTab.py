@@ -5,7 +5,7 @@ import wx
 import threading
 import diarize
 
-class DiarizationEntry(wx.Panel):
+class SubtitleEntry(wx.Panel):
 	def __init__(self, parent, context, sub):
 		super().__init__(parent)
 		self.text = sub.text
@@ -39,7 +39,7 @@ class DiarizationEntry(wx.Panel):
 	def on_sample_button_click(self, event):
 		play(self.sub.dub_line_ram())
 
-class DiarizationTab(wx.Panel):
+class SubtitlesTab(wx.Panel):
 	def __init__(self, notebook, context):
 		super().__init__(notebook)
 		self.context = context
@@ -81,7 +81,7 @@ class DiarizationTab(wx.Panel):
 	def create_entries(self):
 		self.scroll_sizer.Clear(delete_windows=True)
 		for sub in app_state.video.subs_adjusted:
-			diarization_entry = DiarizationEntry(
+			diarization_entry = SubtitleEntry(
 				self.scroll_panel,
 				context=self.context,
 				sub=sub

@@ -52,7 +52,6 @@ I had the idea to call the software Weeablind as a portmanteaux of Weeaboo (some
 - ~~match the volume of the speaker to TTS~~
 - Checkbox to remove sequential subtitle entries and entries that are tiny, e.g. "nom" "nom" "nom" "nom"
 - investigate voice conversion?
-- Rename "SAPI5" to PyTTSx3 and add better support for SAPI5 and OneCore voices
 - Build an asynchronous queue of operations to perform
 - Started - Asynchronous GUI for Coqui model downloads
 - Add support for MyCroft Mimic 3

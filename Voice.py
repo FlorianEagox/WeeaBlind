@@ -12,7 +12,7 @@ class Voice(abc.ABC):
 	class VoiceType(Enum):
 		ESPEAK = "ESpeak"
 		COQUI = "Coqui TTS"
-		SAPI5 = "System Voices"
+		SYSTEM = "System Voices"
 
 	def __new__(cls, voice_type, init_args=[], name="Unnamed"):
 		if cls is Voice:
@@ -20,8 +20,8 @@ class Voice(abc.ABC):
 				return super().__new__(ESpeakVoice)
 			elif voice_type == cls.VoiceType.COQUI:
 				return super().__new__(CoquiVoice)
-			elif voice_type == cls.VoiceType.SAPI5:
-				return super().__new__(SAPI5Voice)
+			elif voice_type == cls.VoiceType.SYSTEM:
+				return super().__new__(SystemVoice)
 		else:
 			return super().__new__(cls)
 
@@ -116,9 +116,9 @@ class CoquiVoice(Voice):
 	def list_speakers(self):
 		return self.voice.speakers if self.voice.is_multi_speaker else []
 
-class SAPI5Voice(Voice):
+class SystemVoice(Voice):
 	def __init__(self, init_args=[], name="Unnamed"):
-		super().__init__(Voice.VoiceType.SAPI5, init_args, name)
+		super().__init__(Voice.VoiceType.SYSTEM, init_args, name)
 		self.voice = pyttsx3.init()
 		self.voice_option = self.voice.getProperty('voice')
 

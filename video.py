@@ -24,7 +24,7 @@ class Video:
 		self.audio = AudioSegment.from_file(video_path)
 		self.duration = float(ffmpeg.probe(video_path)["format"]["duration"])
 		self.update_time(0, self.duration)
-		if progress_hook: progress_hook(finished=True)
+		if progress_hook: progress_hook({"status": "finished"})
 
 	def download_video(self, link, progress_hook=None):
 		options = {

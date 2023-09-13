@@ -82,12 +82,12 @@ class GUI(wx.Panel):
 		if video_path.startswith("http"):
 			dialog = wx.ProgressDialog("Downloading Vidoe", "download starting", 100, self)
 			def update_progress(progress=None, finished=False):
-				if finished:
+				status = progress['status']
+				if status == "finished":
 					wx.CallAfter(dialog.Destroy)
 					wx.CallAfter(update_ui)
 					return
-				status = progress['status']
-				if status == "downloading" and progress["total_bytes"]:
+				elif status == "downloading" and progress["total_bytes"]:
 					percent_complete = int(100*(progress["downloaded_bytes"] / progress["total_bytes"]))
 					wx.CallAfter(dialog.Update, percent_complete, f"{status}: {percent_complete}% \n {progress['info_dict']['fulltitle'] or ''}")
 			

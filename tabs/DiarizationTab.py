@@ -1,10 +1,9 @@
-import synth
 import utils
 import app_state
 from pydub.playback import play
-import synth
 import wx
 import threading
+import diarize
 
 class DiarizationEntry(wx.Panel):
 	def __init__(self, parent, context, sub):
@@ -38,7 +37,7 @@ class DiarizationEntry(wx.Panel):
 		pass
 
 	def on_sample_button_click(self, event):
-		play(self.sub.dub_line_ram(self.sub))
+		play(self.sub.dub_line_ram())
 
 class DiarizationTab(wx.Panel):
 	def __init__(self, notebook, context):
@@ -61,12 +60,12 @@ class DiarizationTab(wx.Panel):
 		self.SetSizerAndFit(main_sizer)
 
 	def run_diarization(self, event):
-		synth.run_diarization()
+		diarize.run_diarization(app_state.video)
 		self.create_entries()
 		self.context.update_voices_list()
 	
 	def filter_language(self, event):
-		dialog = wx.ProgressDialog("Filtering Subtitles", "starting", len(synth.subs_adjusted), self)
+		dialog = wx.ProgressDialog("Filtering Subtitles", "starting", len(app_state.video.subs_adjusted), self)
 		def update_progress(progress, status):
 			def run_after():
 				self.create_entries()
@@ -76,19 +75,12 @@ class DiarizationTab(wx.Panel):
 				return wx.CallAfter(run_after)
 			else:
 				wx.CallAfter(dialog.Update, progress, status)
-		threading.Thread(target=synth.filter_multilingual_subtiles, args=(update_progress,)).start()
+		threading.Thread(target=app_state.video.filter_multilingual_subtiles, args=(update_progress,)).start()
 
 
 	def create_entries(self):
 		self.scroll_sizer.Clear(delete_windows=True)
 		for sub in app_state.video.subs_adjusted:
-			# diarization_entry = DiarizationEntry(
-			# 	self.scroll_panel,
-			# 	start_time=entry[1],
-			# 	end_time=entry[2],
-			# 	speaker=entry[0],
-			# 	text=synth.subs_adjusted[synth.find_nearest([sub.startZ for sub in synth.subs_adjusted], entry[1])].content
-			# )
 			diarization_entry = DiarizationEntry(
 				self.scroll_panel,
 				context=self.context,

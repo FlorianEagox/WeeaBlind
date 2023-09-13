@@ -1,5 +1,4 @@
 import wx
-import synth
 from Voice import Voice
 from pydub import AudioSegment
 from pydub.playback import play
@@ -102,7 +101,7 @@ class GUI(wx.Panel):
 		
 
 	def change_crop_time(self, event):
-		app_state.video.time_change(
+		app_state.video.update_time(
 			utils.timecode_to_seconds(self.txt_start.Value),
 			utils.timecode_to_seconds(self.txt_end.Value)
 		)
@@ -131,7 +130,7 @@ class GUI(wx.Panel):
 				return wx.CallAfter(progress_dialog.Destroy)
 			wx.CallAfter(progress_dialog.Update, i, text)
 
-		dub_thread = threading.Thread(target=synth.run_dubbing, args=(update_progress,))
+		dub_thread = threading.Thread(target=app_state.video.run_dubbing, args=(update_progress,))
 		dub_thread.start()
 
 if __name__ == '__main__':

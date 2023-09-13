@@ -1,5 +1,5 @@
 import os.path
-from app_state import sample_speaker
+import app_state
 import numpy as np
 from pydub.playback import play
 from pydub import AudioSegment
@@ -48,5 +48,6 @@ def find_nearest(array, value):
 	return (np.abs(np.asarray(array) - value)).argmin()
 
 def sampleVoice(text, output=default_sample_path):
-	play(AudioSegment.from_file(sample_speaker.speak(text, output)))
+	play(AudioSegment.from_file(app_state.sample_speaker.speak(text, output)))
 
+snippet_export_path = get_output_path("video_snippet", "wav")

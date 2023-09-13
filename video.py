@@ -2,11 +2,12 @@
 The Video class represents a reference to a video from either a file or web link. This class should implement the ncessary info to dub a video.
 """
 
+import time
 import ffmpeg
 from yt_dlp import YoutubeDL
 import utils
 from pydub import AudioSegment
-from dub_line import load_subs 
+from dub_line import load_subs, isnt_target_language
 
 class Video:
 	def __init__(self, video_URL, loading_progress_hook):
@@ -21,8 +22,8 @@ class Video:
 		self.file = video_path
 		self.subs = self.subs_adjusted = load_subs(sub_path or video_path, utils.get_output_path(self.file, '.srt'))
 		self.audio = AudioSegment.from_file(video_path)
-		self.total_duration = float(ffmpeg.probe(video_path)["format"]["duration"])
-		self.update_time(0, self.total_duration)
+		self.duration = float(ffmpeg.probe(video_path)["format"]["duration"])
+		self.update_time(0, self.duration)
 		if progress_hook: progress_hook(finished=True)
 
 	def download_video(self, link, progress_hook=None):
@@ -52,6 +53,7 @@ class Video:
 	def get_snippet(self, start, end):
 		return self.audio[start*1000:end*1000]
 	
+	# Crops the video's audio segment to reduce memory size
 	def crop_audio(self):
 		# ffmpeg -i .\saiki.mkv -vn -ss 84 -to 1325 crop.wav
 		output = utils.get_output_path(self.file, "-crop.wav")
@@ -65,10 +67,46 @@ class Video:
 		)
 		return output
 
+	def filter_multilingual_subtiles(self, progress_hook=None):
+		multi_lingual_subs = []
+		for i, sub in enumerate(self.subs_adjusted):
+			snippet = self.get_snippet(sub.start, sub.end).export(utils.get_output_path('video_snippet', '.wav'), format="wav").name
+			if isnt_target_language(snippet):
+				multi_lingual_subs.append(sub)
+			progress_hook(i, f"{i}/{len(self.subs_adjusted)}: {sub.text}")
+		self.subs_adjusted = multi_lingual_subs
+		progress_hook(-1, "done")
+
+	def run_dubbing(self, progress_hook=None):
+		total_errors = 0
+		operation_start_time = time.process_time()
+		empty_audio = AudioSegment.silent(self.duration * 1000, frame_rate=22050)
+		status = ""
+		# with concurrent.futures.ThreadPoolExecutor(max_workers=100) as pool:
+		# 	tasks = [pool.submit(dub_task, sub, i) for i, sub in enumerate(subs_adjusted)]		
+		# 	for future in concurrent.futures.as_completed(tasks):
+		# 		pass
+		for i, sub in enumerate(self.subs_adjusted):
+			status = f"{i}/{len(self.subs_adjusted)}"
+			progress_hook(i, f"{status}: {sub.text}")
+			try:
+				line = sub.dub_line_ram()
+				empty_audio = empty_audio.overlay(line, sub.start*1000)
+			except Exception as e:
+				print(e)
+				total_errors += 1
+		self.dub_track = empty_audio.export(utils.get_output_path(self.file, '-dubtrack.wav'), format="wav").name
+		progress_hook(i+1, "Mixing New Audio")
+		self.mix_av(mixing_ratio=4)
+		progress_hook(-1)
+		print(f"TOTAL TIME TAKEN: {time.process_time() - operation_start_time}")
+		# print(total_errors)
+
+
 	# This runs an ffmpeg command to combine the audio, video, and subtitles with a specific ratio of how loud to make the dubtrack
 	def mix_av(self, mixing_ratio=6, dubtrack=None, output_path=None):
 		# i hate python, plz let me use self in func def
-		if not dubtrack: dubtrack = utils.get_output_path(self.file, '-dubtrack.wav')
+		if not dubtrack: dubtrack = self.dub_track
 		if not output_path: output_path = utils.get_output_path(self.file, '-dubbed.mkv')
 
 		input_video = ffmpeg.input(self.file)
@@ -80,6 +118,9 @@ class Video:
 		output = (
 			# input_video['s']
 			ffmpeg.output(input_video['v'], mixed_audio, output_path, vcodec="copy", acodec="aac")
+			.global_args('-loglevel', 'error')
 			.global_args('-shortest')
 		)
 		ffmpeg.run(output, overwrite_output=True)
+
+

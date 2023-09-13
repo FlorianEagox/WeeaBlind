@@ -1,9 +1,11 @@
 from dataclasses import dataclass
 from Voice import Voice
 import ffmpeg
-# from synth import get_output_path, current_file
+import utils
+import app_state
 import srt
 from re import compile, sub as substitute
+from pydub import AudioSegment
 from audiotsm import wsola
 from audiotsm.io.wav import WavReader, WavWriter
 from audiotsm.io.array import ArrayReader, ArrayWriter
@@ -11,6 +13,7 @@ from speechbrain.pretrained import EncoderClassifier
 import numpy as np
 
 remove_xml = compile(r'<[^>]+>|\{[^}]+\}')
+language_identifier_model = EncoderClassifier.from_hparams(source="speechbrain/lang-id-voxlingua107-ecapa", savedir="tmp")
 
 @dataclass
 class DubbedLine:
@@ -18,15 +21,27 @@ class DubbedLine:
 	end: float
 	text: str
 	index: int
-	voice: Voice = 0
+	voice: int = 0
 
-	def post_process(self, file, source_start, source_end, adjust_volume=True):
-		adjustment = match_rate(file, source_end-source_start)
-		if adjust_volume:
-			adjustment = match_volume(get_snippet(source_start, source_end), adjustment, adjustment)
-		return adjustment
+	def dub_line_ram(self, output=True):
+		output_path = utils.get_output_path(str(self.index), '.wav', path='files')
+		tts_audio = app_state.speakers[self.voice].speak(self.text)
+		rate_adjusted = self.match_rate_ram(tts_audio, self.end-self.start)
+		data = rate_adjusted / np.max(np.abs(rate_adjusted))
+		audio_as_int = (data * (2**15)).astype(np.int16).tobytes()
+		segment = AudioSegment(
+			audio_as_int,
+			frame_rate=22050,
+			sample_width=2,
+			channels=1
+		)
+		# segment = AudioSegment.from_wav(output_path)
+		result = segment #match_volume(get_snippet(sub.start, sub.end), segment)
+		if output:
+			result.export(output_path, format='wav')
+		return result
 
-	def match_rate(target, source_duration, destination_path=None, clamp_min=0, clamp_max=4):
+	def match_rate(self, target, source_duration, destination_path=None, clamp_min=0, clamp_max=4):
 		if destination_path == None:
 			destination_path = target.split('.')[0] + '-timeshift.wav'
 		duration = float(ffmpeg.probe(target)["format"]["duration"])
@@ -38,7 +53,7 @@ class DubbedLine:
 				tsm.run(reader, writer)
 		return destination_path
 
-	def match_rate_ram(target, source_duration, outpath=None, clamp_min=0.8, clamp_max=2.5):
+	def match_rate_ram(self, target, source_duration, outpath=None, clamp_min=0.8, clamp_max=2.5):
 		num_samples = len(target)
 		target = target.reshape(1, num_samples)
 		duration = num_samples / 22050
@@ -64,10 +79,10 @@ class DubbedLine:
 		return adjusted_audio
 		# adjusted_audio.export(output_path, format="wav")
 
-language_id = EncoderClassifier.from_hparams(source="speechbrain/lang-id-voxlingua107-ecapa", savedir="tmp")
-def isnt_target_language(target="./output/video_snippet.wav", exclusion="English"):
-	signal = language_id.load_audio(target)
-	prediction = language_id.classify_batch(signal)
+
+def isnt_target_language(file, exclusion="English"):
+	signal = language_identifier_model.load_audio(file)
+	prediction = language_identifier_model.classify_batch(signal)
 	return prediction[3][0].split(' ')[1] != exclusion
 
 def load_subs(import_path=False, export=""):

@@ -10,10 +10,10 @@ class ConfigureVoiceTab(wx.Panel):
 		# EDIT VOICE PARAMS
 		lbl_voice_name = wx.StaticText(self, label="Name")
 		self.txt_voice_name = wx.TextCtrl(self, value=app_state.current_speaker.name)
-		self.cb_voice_types = wx.ComboBox(self, style= wx.CB_READONLY, choices=[str(val) for val in Voice.VoiceType])
-		self.cb_voice_types.Bind(wx.EVT_COMBOBOX, self.change_voice_type)
-		self.cb_voice_options = wx.ComboBox(self, style= wx.CB_READONLY, choices=app_state.current_speaker.list_voice_options())
-		self.cb_voice_options.Bind(wx.EVT_COMBOBOX, self.change_voice_params)
+		self.cb_tts_engines = wx.ComboBox(self, style= wx.CB_READONLY, choices=[str(val) for val in Voice.VoiceType])
+		self.cb_tts_engines.Bind(wx.EVT_COMBOBOX, self.change_tts_engine)
+		self.cb_model_options = wx.ComboBox(self, style= wx.CB_READONLY, choices=app_state.current_speaker.list_voice_options())
+		self.cb_model_options.Bind(wx.EVT_COMBOBOX, self.change_voice_params)
 
 		# Show a dropdown box for multi-speaker Coqui models
 		self.cb_speaker_voices = wx.ComboBox(self, style=wx.CB_READONLY, choices=[])
@@ -33,8 +33,8 @@ class ConfigureVoiceTab(wx.Panel):
 
 		szr_voice_params.Add(lbl_voice_name, 0, wx.ALL|wx.ALIGN_LEFT, 5)
 		szr_voice_params.Add(self.txt_voice_name, 0, wx.ALL|wx.ALIGN_LEFT, 5)
-		szr_voice_params.Add(self.cb_voice_types, 0, wx.ALL|wx.ALIGN_LEFT, 5)
-		szr_voice_params.Add(self.cb_voice_options, 0, wx.ALL|wx.ALIGN_LEFT, 5)
+		szr_voice_params.Add(self.cb_tts_engines, 0, wx.ALL|wx.ALIGN_LEFT, 5)
+		szr_voice_params.Add(self.cb_model_options, 0, wx.ALL|wx.ALIGN_LEFT, 5)
 		szr_voice_params.Add(self.cb_speaker_voices, 0, wx.ALL|wx.ALIGN_LEFT, 5)
 		szr_voice_params.Add(self.txt_sample_synth, 0, wx.ALL|wx.EXPAND, 5)
 		szr_voice_params.Add(self.btn_sample, 0, wx.ALL|wx.ALIGN_RIGHT, 5)
@@ -62,22 +62,22 @@ class ConfigureVoiceTab(wx.Panel):
 
 	def update_voice_fields(self, event):
 		self.txt_voice_name.Value = app_state.sample_speaker.name
-		self.cb_voice_types.Select(list(Voice.VoiceType.__members__.values()).index(app_state.sample_speaker.voice_type))
-		self.cb_voice_options.Set(app_state.sample_speaker.list_voice_options())
+		self.cb_tts_engines.Select(list(Voice.VoiceType.__members__.values()).index(app_state.sample_speaker.voice_type))
+		self.cb_model_options.Set(app_state.sample_speaker.list_voice_options())
 		try:
-			self.cb_voice_options.Select(app_state.sample_speaker.list_voice_options().index(app_state.sample_speaker.voice_option))
+			self.cb_model_options.Select(app_state.sample_speaker.list_voice_options().index(app_state.sample_speaker.voice_option))
 		except:
-			self.cb_voice_options.Select(0)
+			self.cb_model_options.Select(0)
 		self.show_multispeaker()
 
-	def change_voice_type(self, event):
-		app_state.sample_speaker = Voice(list(Voice.VoiceType.__members__.values())[self.cb_voice_types.GetSelection()])
+	def change_tts_engine(self, event):
+		app_state.sample_speaker = Voice(list(Voice.VoiceType.__members__.values())[self.cb_tts_engines.GetSelection()])
 		self.update_voice_fields(event)
 
 	def change_voice_params(self, event):
 		self.SetCursor(wx.Cursor(wx.CURSOR_WAIT))
 		self.Layout()
-		option_name = self.cb_voice_options.GetStringSelection()
+		option_name = self.cb_model_options.GetStringSelection()
 		if app_state.sample_speaker.voice_type == Voice.VoiceType.COQUI:
 			if not app_state.sample_speaker.is_model_downloaded(option_name):
 				message_download = wx.MessageDialog(

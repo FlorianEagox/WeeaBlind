@@ -7,42 +7,61 @@ class ConfigureVoiceTab(wx.Panel):
 	def __init__(self, notebook, parent):
 		super().__init__(notebook)
 		self.parent = parent
-		# EDIT VOICE PARAMS
+
+		# Create a grid sizer with extra padding
+		grid_sizer = wx.FlexGridSizer(cols=2, hgap=5, vgap=10)
+
+		# Add controls with labels
 		lbl_voice_name = wx.StaticText(self, label="Name")
 		self.txt_voice_name = wx.TextCtrl(self, value=app_state.current_speaker.name)
-		self.cb_tts_engines = wx.ComboBox(self, style= wx.CB_READONLY, choices=[str(val) for val in Voice.VoiceType])
-		self.cb_tts_engines.Bind(wx.EVT_COMBOBOX, self.change_tts_engine)
-		self.cb_model_options = wx.ComboBox(self, style= wx.CB_READONLY, choices=app_state.current_speaker.list_voice_options())
-		self.cb_model_options.Bind(wx.EVT_COMBOBOX, self.change_voice_params)
+		self.add_control_with_label(grid_sizer, lbl_voice_name, self.txt_voice_name)
 
-		# Show a dropdown box for multi-speaker Coqui models
-		self.cb_speaker_voices = wx.ComboBox(self, style=wx.CB_READONLY, choices=[])
-		self.cb_speaker_voices.Bind(wx.EVT_COMBOBOX, self.change_voice_params)
+		lbl_tts_engines = wx.StaticText(self, label="TTS Engine")
+		self.cb_tts_engines = wx.Choice(self, choices=[str(val) for val in Voice.VoiceType])
+		self.cb_tts_engines.Bind(wx.EVT_CHOICE, self.change_tts_engine)
+		self.add_control_with_label(grid_sizer, lbl_tts_engines, self.cb_tts_engines)
+
+		lbl_model_options = wx.StaticText(self, label="Model Options")
+		self.cb_model_options = wx.Choice(self, choices=app_state.current_speaker.list_voice_options())
+		self.cb_model_options.Bind(wx.EVT_CHOICE, self.change_voice_params)
+		self.add_control_with_label(grid_sizer, lbl_model_options, self.cb_model_options)
+
+		# This is for multispeaker coqui models. Should be hidden by default & shown when model is multispeaker
+		self.lbl_speaker_voices = wx.StaticText(self, label="Speaker Voices")
+		self.cb_speaker_voices = wx.Choice(self, choices=[])
+		self.cb_speaker_voices.Bind(wx.EVT_CHOICE, self.change_voice_params)
+		self.lbl_speaker_voices.Hide()
 		self.cb_speaker_voices.Hide()  # Hide by default, show only when multi-speaker Coqui model is selected
+		self.add_control_with_label(grid_sizer, self.lbl_speaker_voices, self.cb_speaker_voices)
 
-		# SAMPLE CURRENT VOICE
-		self.txt_sample_synth = wx.TextCtrl(self, value=f"I do be slurpin' that cheese without my momma's permission")
-		self.btn_sample = wx.Button(self, label="Sample Voice")
+		lbl_sample_text = wx.StaticText(self, label="Sample Text")
+		self.txt_sample_text = wx.TextCtrl(self, value="I do be slurpin' that cheese without my momma's permission")
+		self.add_control_with_label(grid_sizer, lbl_sample_text, self.txt_sample_text)
+
+		self.btn_sample = wx.Button(self, label="▶️ Sample Voice")
 		self.btn_sample.Bind(wx.EVT_BUTTON, self.sample)
 
 		self.btn_update_voice = wx.Button(self, label="Update Voice")
 		self.btn_update_voice.Bind(wx.EVT_BUTTON, self.update_voice)
 
-		szr_voice_params = wx.BoxSizer(wx.VERTICAL)
-		self.SetSizer(szr_voice_params)
+		# Add the buttons to the grid without labels
+		grid_sizer.AddStretchSpacer()
+		grid_sizer.Add(self.btn_sample, 0, wx.ALL | wx.ALIGN_RIGHT, 5)
+		grid_sizer.Add(self.btn_update_voice, 0, wx.ALL | wx.ALIGN_LEFT, 5)
 
-		szr_voice_params.Add(lbl_voice_name, 0, wx.ALL|wx.ALIGN_LEFT, 5)
-		szr_voice_params.Add(self.txt_voice_name, 0, wx.ALL|wx.ALIGN_LEFT, 5)
-		szr_voice_params.Add(self.cb_tts_engines, 0, wx.ALL|wx.ALIGN_LEFT, 5)
-		szr_voice_params.Add(self.cb_model_options, 0, wx.ALL|wx.ALIGN_LEFT, 5)
-		szr_voice_params.Add(self.cb_speaker_voices, 0, wx.ALL|wx.ALIGN_LEFT, 5)
-		szr_voice_params.Add(self.txt_sample_synth, 0, wx.ALL|wx.EXPAND, 5)
-		szr_voice_params.Add(self.btn_sample, 0, wx.ALL|wx.ALIGN_RIGHT, 5)
-		szr_voice_params.Add(self.btn_update_voice, 0, wx.ALL|wx.ALIGN_LEFT, 5)
+		# Set the grid sizer as the main sizer for the panel with extra padding
+		main_sizer = wx.BoxSizer(wx.VERTICAL)
+		main_sizer.Add(grid_sizer, 0, wx.ALL | wx.EXPAND, 15)
+		self.SetSizerAndFit(main_sizer)
 
+
+
+	def add_control_with_label(self, sizer, label, control):
+		sizer.Add(label, 0, wx.ALL|wx.ALIGN_LEFT, 5)
+		sizer.Add(control, 0, wx.ALL|wx.EXPAND, 5)
 
 	def sample(self, event):
-		utils.sampleVoice(self.txt_sample_synth.Value)
+		utils.sampleVoice(self.txt_sample_text.Value)
 
 	def update_voice(self, event):
 		app_state.sample_speaker.name = self.txt_voice_name.Value
@@ -52,11 +71,13 @@ class ConfigureVoiceTab(wx.Panel):
 
 	def show_multispeaker(self):
 		if app_state.sample_speaker.voice_type == Voice.VoiceType.COQUI and app_state.sample_speaker.is_multispeaker:
+			self.lbl_speaker_voices.Show()
 			self.cb_speaker_voices.Show()
 			self.cb_speaker_voices.Set(app_state.sample_speaker.list_speakers())
 			if app_state.sample_speaker.speaker:
-				self.cb_speaker_voices.SetValue(app_state.sample_speaker.speaker)
+				self.cb_speaker_voices.SetStringSelection(app_state.sample_speaker.speaker)
 		else:
+			self.lbl_speaker_voices.Hide()
 			self.cb_speaker_voices.Hide()
 		self.Layout()
 

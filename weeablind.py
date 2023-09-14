@@ -1,4 +1,5 @@
 import wx
+import wx.adv
 from Voice import Voice
 from pydub import AudioSegment
 from pydub.playback import play
@@ -14,27 +15,31 @@ class GUI(wx.Panel):
 	def __init__(self, parent):
 		super().__init__(parent)
 
-		btn_choose_file = wx.Button(self, label="Choose FIle")
+		# Labels
+		lbl_title = wx.StaticText(self, label="WeeaBlind")
+		lbl_GPU = wx.StaticText(self, label=f"GPU Detected? {utils.gpu_detected}")
+		lbl_GPU.SetForegroundColour((0, 255, 0) if utils.gpu_detected else (255, 0, 0))
+		lbl_main_file = wx.StaticText(self, label="Choose a video file or link to a YouTube video:")
+		lbl_start_time = wx.StaticText(self, label="Start Time:")
+		lbl_end_time = wx.StaticText(self, label="End Time:")
+
+		# Controls
+		btn_choose_file = wx.Button(self, label="Choose File")
 		btn_choose_file.Bind(wx.EVT_BUTTON, self.open_file)
 
 		self.txt_main_file = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER, value=utils.test_video_name)
 		self.txt_main_file.Bind(wx.EVT_TEXT_ENTER, lambda event: self.load_video(self.txt_main_file.Value))
-		lbl_title = wx.StaticText(self, label="WeeaBlind")
 
-		lbl_GPU = wx.StaticText(self, label=f"GPU Detected? {utils.gpu_detected}")
-		lbl_GPU.SetForegroundColour((0, 255, 0) if utils.gpu_detected else (255, 0, 0))
-
-		self.chk_match_volume = wx.CheckBox(self, label="Match Speaker Volume")
-		self.chk_match_volume.SetValue(True)
-		
 		self.txt_start = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER, value=utils.seconds_to_timecode(0))
-		self.txt_end   = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER, value=utils.seconds_to_timecode(0))
+		self.txt_end = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER, value=utils.seconds_to_timecode(0))
 		self.txt_start.Bind(wx.EVT_TEXT_ENTER, self.change_crop_time)
 		self.txt_end.Bind(wx.EVT_TEXT_ENTER, self.change_crop_time)
 
-		self.chk_multilangual = wx.CheckBox(self)
+		self.chk_match_volume = wx.CheckBox(self, label="Match Speaker Volume")
+		self.chk_match_volume.SetValue(True)
 
-		# SHOW A LIST OF VOICES
+		self.chk_multilingual = wx.CheckBox(self, label="Multilingual")
+
 		self.lb_voices = wx.ListBox(self, choices=[speaker.name for speaker in app_state.speakers])
 		self.lb_voices.Bind(wx.EVT_LISTBOX, self.on_voice_change)
 		self.lb_voices.Select(0)
@@ -48,20 +53,25 @@ class GUI(wx.Panel):
 		btn_run_dub = wx.Button(self, label="Run Dubbing!")
 		btn_run_dub.Bind(wx.EVT_BUTTON, self.run_dub)
 
-		self.on_voice_change(None)
+		# GridBagSizer
+		sizer = wx.GridBagSizer(vgap=5, hgap=5)
 
-		sizer = wx.BoxSizer(wx.VERTICAL)
-		sizer.Add(lbl_title, 0, wx.ALL|wx.CENTER, 5)
-		sizer.Add(lbl_GPU, 0, wx.ALL|wx.CENTER, 5)
-		sizer.Add(self.txt_main_file, 0, wx.ALL|wx.EXPAND, 5)
-		sizer.Add(btn_choose_file, 0, wx.ALL|wx.ALIGN_RIGHT, 5)
-		sizer.Add(self.txt_start, 0, wx.ALL, 5)
-		sizer.Add(self.txt_end, 0, wx.ALL, 5)
-		sizer.Add(self.chk_match_volume, 0, wx.ALL|wx.ALIGN_LEFT, 5)
-		sizer.Add(self.lb_voices, 0, wx.ALL|wx.ALIGN_LEFT, 5)
-		sizer.Add(tab_control, 1, wx.EXPAND, 5)
-		sizer.Add(btn_run_dub, 1, wx.ALIGN_RIGHT, 5)
-		self.SetSizer(sizer)
+		sizer.Add(lbl_title, pos=(0, 0), span=(1, 2), flag=wx.CENTER | wx.ALL, border=5)
+		sizer.Add(lbl_GPU, pos=(1, 0), span=(1, 2), flag=wx.CENTER | wx.ALL, border=5)
+		sizer.Add(lbl_main_file, pos=(2, 0), span=(1, 2), flag=wx.LEFT | wx.TOP, border=5)
+		sizer.Add(self.txt_main_file, pos=(3, 0), span=(1, 1), flag=wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, border=5)
+		sizer.Add(btn_choose_file, pos=(3, 1), span=(1, 1), flag=wx.ALIGN_RIGHT | wx.RIGHT | wx.BOTTOM, border=5)
+		sizer.Add(lbl_start_time, pos=(4, 0), flag=wx.LEFT | wx.TOP, border=5)
+		sizer.Add(self.txt_start, pos=(4, 1), flag=wx.EXPAND | wx.TOP | wx.RIGHT, border=5)
+		sizer.Add(lbl_end_time, pos=(5, 0), flag=wx.LEFT | wx.TOP, border=5)
+		sizer.Add(self.txt_end, pos=(5, 1), flag=wx.EXPAND | wx.TOP | wx.RIGHT, border=5)
+		sizer.Add(self.chk_match_volume, pos=(6, 0), span=(1, 2), flag=wx.LEFT | wx.TOP, border=5)
+		sizer.Add(self.chk_multilingual, pos=(7, 0), span=(1, 2), flag=wx.LEFT | wx.TOP, border=5)
+		sizer.Add(self.lb_voices, pos=(8, 0), span=(1, 1), flag=wx.EXPAND | wx.LEFT | wx.TOP, border=5)
+		sizer.Add(tab_control, pos=(8, 1), span=(1, 3), flag=wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, border=5)
+		sizer.Add(btn_run_dub, pos=(9, 2), span=(1, 1), flag=wx.ALIGN_RIGHT | wx.RIGHT | wx.BOTTOM, border=5)
+
+		self.SetSizerAndFit(sizer)
 
 	def open_file(self, evenet):
 		dlg = wx.FileDialog(

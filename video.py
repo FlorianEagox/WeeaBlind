@@ -10,13 +10,13 @@ from pydub import AudioSegment
 from dub_line import load_subs, isnt_target_language
 
 class Video:
-	def __init__(self, video_URL, loading_progress_hook):
+	def __init__(self, video_URL, loading_progress_hook=None):
 		self.start_time = self.end_time = 0
 		self.speech_diary = self.speech_diary_adjusted = None
 		self.load_video(video_URL, loading_progress_hook)
 
-	def load_video(self, video_path, progress_hook=None, callback=None):
-		self.sub_path = ""
+	def load_video(self, video_path, progress_hook=None):
+		sub_path = ""
 		if video_path.startswith("http"):
 			video_path, sub_path = self.download_video(video_path, progress_hook)
 		self.file = video_path

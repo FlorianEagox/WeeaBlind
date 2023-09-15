@@ -20,7 +20,7 @@ def create_output_dir():
 def get_output_path(input, suffix, prefix='', path=''):
 	filename = os.path.basename(input)
 	filename_without_extension = os.path.splitext(filename)[0]
-	return os.path.join('output', path, f"{prefix}{filename_without_extension}{suffix}")
+	return os.path.join(os.path.dirname(os.path.abspath(__file__)), 'output', path, f"{prefix}{filename_without_extension}{suffix}")
 
 def timecode_to_seconds(timecode):
 	parts = list(map(float, timecode.split(':')))

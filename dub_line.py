@@ -85,18 +85,20 @@ def isnt_target_language(file, exclusion="English"):
 	prediction = language_identifier_model.classify_batch(signal)
 	return prediction[3][0].split(' ')[1] != exclusion
 
-# Ok how did this function get so confusing? lmao
-def load_subs(import_path=False, export=""):
-	# export = get_output_path(current_file, '.srt')
-	if import_path: # For importing an external subtitles file
+# This function is designed to handle two cases
+#	1 We just have a path to an srt that we want to import
+#	2 You have a file containing subs, but not srt (a video file, a vtt, whatever)
+# 		In this case, we must extract or convert the subs to srt, and then read it in (export then import)
+def load_subs(import_path="", extract_subs_path=False):
+	if extract_subs_path: # For importing an external subtitles file
 		(
 			ffmpeg
-			.input(import_path)
-			.output(export)
+			.input(extract_subs_path)
+			.output(import_path)
 			.global_args('-loglevel', 'error')
 			.run(overwrite_output=True)
 		)
-	with open(export, "r", encoding="utf-8") as f:
+	with open(import_path, "r", encoding="utf-8") as f:
 		original_subs = list(srt.parse(f.read()))
 		return [
 			DubbedLine(

@@ -12,33 +12,37 @@ import json
 class Video:
 	def __init__(self, video_URL, loading_progress_hook=None):
 		self.start_time = self.end_time = 0
+		self.downloaded = False
 		self.speech_diary = self.speech_diary_adjusted = None
 		self.load_video(video_URL, loading_progress_hook)
+
 
 	# This is responsible for loading the app's audio and subtitles from a video file or YT link
 	def load_video(self, video_path, progress_hook=None):
 		sub_path = ""
 		if video_path.startswith("http"):
-			video_path, sub_path = self.download_video(video_path, progress_hook)
+			self.downloaded = True
+			video_path, sub_path, self.yt_sub_streams = self.download_video(video_path, progress_hook)
+		else:
+			self.downloaded = False
 		self.file = video_path
-		self.subs = self.subs_adjusted = load_subs(sub_path or video_path, utils.get_output_path(self.file, '.srt'))
+		self.subs = self.subs_adjusted = load_subs(utils.get_output_path(self.file, '.srt'), sub_path or video_path)
 		self.audio = AudioSegment.from_file(video_path)
 		self.duration = float(ffmpeg.probe(video_path)["format"]["duration"])
 		self.update_time(0, self.duration)
-		if progress_hook: progress_hook({"status": "finished"})
 
 	def download_video(self, link, progress_hook=None):
 		options = {
 			'outtmpl': 'output/%(id)s.%(ext)s',
 			'writesubtitles': True,
-			"subtitlesformat": "srt",
-			"subtitleslangs": "all",
+			"subtitleslangs": ["all"],
 			"progress_hooks": (progress_hook,)
 		}
+		# if progress_hook:
+			# options["progress_hooks"] = (progress_hook,)
 		with YoutubeDL(options) as ydl:
 			info = ydl.extract_info(link)
-			print(json.dumps(info['subtitles']))
-			return ydl.prepare_filename(info), list(info["subtitles"].values())[0][-1]["filepath"]
+			return ydl.prepare_filename(info), list(info["subtitles"].values())[0][-1]["filepath"], info["subtitles"]
 
 	def update_time(self, start, end):
 		self.start_time = start
@@ -52,9 +56,13 @@ class Video:
 
 	def list_streams(self):
 		probe = ffmpeg.probe(self.file)["streams"]
+		if self.downloaded:
+			subs = [{"name": stream[-1]['name'], "stream": stream[-1]['filepath']} for stream in self.yt_sub_streams.values()]
+		else:
+			subs = [{"name": stream['tags'].get('language', 'unknown'), "stream": stream['index']} for stream in probe if stream["codec_type"] == "subtitle"]
 		return {
 			"audio": [stream for stream in probe if stream["codec_type"] == "audio"],
-			"subs": [stream for stream in probe if stream["codec_type"] == "subtitle"],
+			"subs": subs
 		}
 
 	def get_snippet(self, start, end):
@@ -130,11 +138,17 @@ class Video:
 		ffmpeg.run(output, overwrite_output=True)
 
 	# Change the subs to either a file or a different stream from the video file
-	def change_subs(self, stream_index=-1, file=""):
-		# ffmpeg -i output.mkv -map 0:s:1 frick.srt
-		sub_path = utils.get_output_path(self.file, '.srt')
-		(
-			ffmpeg.input(self.file)
-			.output(sub_path, map=f"0:s:{stream_index}").run(overwrite_output=True)
-		)
-		self.subs = self.subs_adjusted = load_subs(export=sub_path)
+	def change_subs(self, stream_index=-1):
+		if self.downloaded:
+			sub_path = list(self.yt_sub_streams.values())[stream_index][-1]['filepath']
+			self.subs = self.subs_adjusted = load_subs(utils.get_output_path(sub_path, '.srt'), sub_path)
+		else:
+			# ffmpeg -i output.mkv -map 0:s:1 frick.srt
+			sub_path = utils.get_output_path(self.file, '.srt')
+			ffmpeg.input(self.file).output(sub_path, map=f"0:s:{stream_index}").run(overwrite_output=True)
+			self.subs = self.subs_adjusted = load_subs(sub_path)
+
+	def change_audio(self, stream_index=-1):
+		audio_path = utils.get_output_path(self.file, f"-${stream_index}.wav")
+		ffmpeg.input(self.file).output(audio_path, map=f"0:a:{stream_index}").run(overwrite_output=True)
+		self.audio = AudioSegment.from_file(audio_path)

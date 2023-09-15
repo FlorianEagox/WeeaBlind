@@ -54,7 +54,6 @@ class GUI(wx.Panel):
 		tab_control.AddPage(self.streams_tab, "Video Streams")
 		btn_run_dub = wx.Button(self, label="Run Dubbing!")
 		btn_run_dub.Bind(wx.EVT_BUTTON, self.run_dub)
-		# GridBagSizer
 		sizer = wx.GridBagSizer(vgap=5, hgap=5)
 
 		sizer.Add(lbl_title, pos=(0, 0), span=(1, 2), flag=wx.CENTER | wx.ALL, border=5)
@@ -92,27 +91,30 @@ class GUI(wx.Panel):
 			self.txt_start.SetValue(utils.seconds_to_timecode(app_state.video.start_time))
 			self.txt_end.SetValue(utils.seconds_to_timecode(app_state.video.end_time))
 			self.tab_subtitles.create_entries()
+
+		def initialize_video(progress=True):
+			app_state.video = Video(video_path, update_progress if progress else None)
+			wx.CallAfter(update_ui)
+			wx.CallAfter(self.streams_tab.populate_streams, app_state.video.list_streams())
+
 		if video_path.startswith("http"):
-			dialog = wx.ProgressDialog("Downloading Vidoe", "download starting", 100, self)
-			def update_progress(progress=None, finished=False):
-				status = progress['status']
+			dialog = wx.ProgressDialog("Downloading Video", "Download starting", 100, self)
+
+			def update_progress(progress=None):
+				status = progress['status'] if progress else "waiting"
 				if status == "finished":
-					wx.CallAfter(dialog.Destroy)
-					wx.CallAfter(update_ui)
-					return
+					if dialog:
+						wx.CallAfter(dialog.Destroy)
 				elif status == "downloading" and progress["total_bytes"]:
-					percent_complete = int(100*(progress["downloaded_bytes"] / progress["total_bytes"]))
+					percent_complete = int(100 * (progress["downloaded_bytes"] / progress["total_bytes"]))
 					wx.CallAfter(dialog.Update, percent_complete, f"{status}: {percent_complete}% \n {progress['info_dict']['fulltitle'] or ''}")
-			
-			#python is stupid and won't let you do this as a lambda -_-
-			def initialize_video(): app_state.video = Video(video_path, update_progress)
-			download_thread = threading.Thread(target=initialize_video)
-			download_thread.start()
+
+			threading.Thread(target=initialize_video).start()
 		else:
-			app_state.video = Video(video_path)
-			self.streams_tab.populate_streams(app_state.video.list_streams())
-			update_ui()
+			initialize_video(False)
+
 		
+	
 
 	def change_crop_time(self, event):
 		app_state.video.update_time(

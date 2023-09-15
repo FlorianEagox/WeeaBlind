@@ -25,18 +25,18 @@ class ListStreamsTab(wx.Panel):
 		_rb_audio = self.rb_audio
 		self.rb_audio = wx.RadioBox(self,
 			choices=[f"Stream #{stream['index']} ({stream['tags'].get('language', 'unknown')})" for stream in streams["audio"]],
-			style=wx.RA_SPECIFY_COLS
+			style=wx.RA_VERTICAL
 		)
-		self.rb_audio.Bind(wx.EVT_RADIOBOX, lambda: self.on_audio_selection(None, streams))
-		self.GetSizer().Replace(_rb_audio, lambda: self.rb_audio(None, streams))
+		self.rb_audio.Bind(wx.EVT_RADIOBOX, lambda a: self.on_audio_selection(None, streams))
+		self.GetSizer().Replace(_rb_audio, self.rb_audio)
 		_rb_audio.Destroy()
 		
 		_rb_subs_copy = self.rb_subs
 		self.rb_subs = wx.RadioBox(self,
 			choices=[f"Stream #{stream['index']} ({stream['tags'].get('language', 'unknown')})" for stream in streams["subs"]],
-			style=wx.RA_SPECIFY_COLS
+			style=wx.RA_VERTICAL
 		)
-		self.rb_subs.Bind(wx.EVT_RADIOBOX, self.on_subtitle_selection)
+		self.rb_subs.Bind(wx.EVT_RADIOBOX, lambda a: self.on_subtitle_selection(None, streams))
 		self.GetSizer().Replace(_rb_subs_copy, self.rb_subs)
 		_rb_subs_copy.Destroy()
 
@@ -47,5 +47,6 @@ class ListStreamsTab(wx.Panel):
 		
 
 	def on_subtitle_selection(self, event, streams):
-		app_state.video.change_subs(streams['subs'][self.rb_audio.GetSelection()])
+		# app_state.video.change_subs(stream_index=streams['subs'][self.rb_audio.GetSelection()])
+		app_state.video.change_subs(stream_index=self.rb_subs.GetSelection())
 		self.context.tab_subtitles.create_entries()

@@ -85,6 +85,7 @@ def isnt_target_language(file, exclusion="English"):
 	prediction = language_identifier_model.classify_batch(signal)
 	return prediction[3][0].split(' ')[1] != exclusion
 
+# Ok how did this function get so confusing? lmao
 def load_subs(import_path=False, export=""):
 	# export = get_output_path(current_file, '.srt')
 	if import_path: # For importing an external subtitles file

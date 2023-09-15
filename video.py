@@ -132,9 +132,9 @@ class Video:
 	# Change the subs to either a file or a different stream from the video file
 	def change_subs(self, stream_index=-1, file=""):
 		# ffmpeg -i output.mkv -map 0:s:1 frick.srt
-		sub_file = utils.get_output_path(self.file, '.srt')
+		sub_path = utils.get_output_path(self.file, '.srt')
 		(
-			ffmpeg.input(video_file)
-			.output(sub_file, map=f"s:{stream_index}").run(overwrite_output=True)
+			ffmpeg.input(self.file)
+			.output(sub_path, map=f"0:s:{stream_index}").run(overwrite_output=True)
 		)
-		return sub_file
+		self.subs = self.subs_adjusted = load_subs(export=sub_path)

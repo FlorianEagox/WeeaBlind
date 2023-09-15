@@ -1,0 +1,20 @@
+user loads video
+	video is file:
+		file has subs?
+			load the first subs
+			display all subs
+			user selects new subs:
+				load subs with given stream index
+	video is YT link:
+		download all subs (if any)
+		subs?
+			display the subs
+			user selects subs (vtt)
+				convert the subs to srt
+				load subs
+	there are no subs!?!?!:
+		This is the spooky zone
+		offer to upload a subtitle file?
+
+		offer to attempt video OCR???
+		attempt ASR + Translation? This would be fucking insane don't do this please don't add this feature this is literally impossible, right???

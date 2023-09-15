@@ -5,6 +5,7 @@ from pydub import AudioSegment
 from pydub.playback import play
 from tabs.ConfigureVoiceTab import ConfigureVoiceTab
 from tabs.SubtitlesTab import SubtitlesTab
+from tabs.ListStreams import ListStreamsTab
 import threading
 import utils
 from video import Video
@@ -49,10 +50,10 @@ class GUI(wx.Panel):
 		tab_control.AddPage(self.tab_voice_config, "Configure Voices")
 		self.tab_subtitles = SubtitlesTab(tab_control, self)
 		tab_control.AddPage(self.tab_subtitles, "Subtitles")
-
+		self.streams_tab = ListStreamsTab(tab_control, self)
+		tab_control.AddPage(self.streams_tab, "Video Streams")
 		btn_run_dub = wx.Button(self, label="Run Dubbing!")
 		btn_run_dub.Bind(wx.EVT_BUTTON, self.run_dub)
-
 		# GridBagSizer
 		sizer = wx.GridBagSizer(vgap=5, hgap=5)
 
@@ -70,6 +71,8 @@ class GUI(wx.Panel):
 		sizer.Add(self.lb_voices, pos=(8, 0), span=(1, 1), flag=wx.EXPAND | wx.LEFT | wx.TOP, border=5)
 		sizer.Add(tab_control, pos=(8, 1), span=(1, 3), flag=wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, border=5)
 		sizer.Add(btn_run_dub, pos=(9, 2), span=(1, 1), flag=wx.ALIGN_RIGHT | wx.RIGHT | wx.BOTTOM, border=5)
+
+		self.tab_voice_config.update_voice_fields(None)
 
 		self.SetSizerAndFit(sizer)
 
@@ -107,6 +110,7 @@ class GUI(wx.Panel):
 			download_thread.start()
 		else:
 			app_state.video = Video(video_path)
+			self.streams_tab.populate_streams(app_state.video.list_streams())
 			update_ui()
 		
 

@@ -54,8 +54,6 @@ class ConfigureVoiceTab(wx.Panel):
 		main_sizer.Add(grid_sizer, 0, wx.ALL | wx.EXPAND, 15)
 		self.SetSizerAndFit(main_sizer)
 
-
-
 	def add_control_with_label(self, sizer, label, control):
 		sizer.Add(label, 0, wx.ALL|wx.ALIGN_LEFT, 5)
 		sizer.Add(control, 0, wx.ALL|wx.EXPAND, 5)
@@ -63,12 +61,14 @@ class ConfigureVoiceTab(wx.Panel):
 	def sample(self, event):
 		utils.sampleVoice(self.txt_sample_text.Value)
 
+	# When the user clicks update voice, asign one in the array to the specification
 	def update_voice(self, event):
 		app_state.sample_speaker.name = self.txt_voice_name.Value
 		app_state.speakers[app_state.speakers.index(app_state.current_speaker)] = app_state.sample_speaker
 		app_state.current_speaker = app_state.sample_speaker
 		self.parent.update_voices_list()
 
+	# determines weather to show a box for multispeaker coqui models
 	def show_multispeaker(self):
 		if app_state.sample_speaker.voice_type == Voice.VoiceType.COQUI and app_state.sample_speaker.is_multispeaker:
 			self.lbl_speaker_voices.Show()
@@ -81,6 +81,7 @@ class ConfigureVoiceTab(wx.Panel):
 			self.cb_speaker_voices.Hide()
 		self.Layout()
 
+	# Populate the form with the current sample speaker's params
 	def update_voice_fields(self, event):
 		self.txt_voice_name.Value = app_state.sample_speaker.name
 		self.cb_tts_engines.Select(list(Voice.VoiceType.__members__.values()).index(app_state.sample_speaker.voice_type))
@@ -95,6 +96,7 @@ class ConfigureVoiceTab(wx.Panel):
 		app_state.sample_speaker = Voice(list(Voice.VoiceType.__members__.values())[self.cb_tts_engines.GetSelection()])
 		self.update_voice_fields(event)
 
+	# Update the sample speaker to the specification
 	def change_voice_params(self, event):
 		self.SetCursor(wx.Cursor(wx.CURSOR_WAIT))
 		self.Layout()

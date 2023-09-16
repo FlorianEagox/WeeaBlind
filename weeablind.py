@@ -11,6 +11,7 @@ import utils
 from video import Video
 import app_state
 from video import Video
+import json
 
 class GUI(wx.Panel):
 	def __init__(self, parent):
@@ -57,20 +58,20 @@ class GUI(wx.Panel):
 		sizer = wx.GridBagSizer(vgap=5, hgap=5)
 
 		sizer.Add(lbl_title, pos=(0, 0), span=(1, 2), flag=wx.CENTER | wx.ALL, border=5)
-		sizer.Add(lbl_GPU, pos=(1, 0), span=(1, 2), flag=wx.CENTER | wx.ALL, border=5)
+		sizer.Add(lbl_GPU, pos=(0, 3), span=(1, 1), flag=wx.CENTER | wx.ALL, border=5)
 		sizer.Add(lbl_main_file, pos=(2, 0), span=(1, 2), flag=wx.LEFT | wx.TOP, border=5)
-		sizer.Add(self.txt_main_file, pos=(3, 0), span=(1, 1), flag=wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, border=5)
-		sizer.Add(btn_choose_file, pos=(3, 1), span=(1, 1), flag=wx.ALIGN_RIGHT | wx.RIGHT | wx.BOTTOM, border=5)
+		sizer.Add(self.txt_main_file, pos=(3, 0), span=(1, 2), flag=wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, border=5)
+		sizer.Add(btn_choose_file, pos=(3, 2), span=(1, 1), flag=wx.ALIGN_RIGHT | wx.RIGHT | wx.BOTTOM, border=5)
 		sizer.Add(lbl_start_time, pos=(4, 0), flag=wx.LEFT | wx.TOP, border=5)
-		sizer.Add(self.txt_start, pos=(4, 1), flag=wx.EXPAND | wx.TOP | wx.RIGHT, border=5)
+		sizer.Add(self.txt_start, pos=(4, 1), flag= wx.TOP | wx.RIGHT, border=5)
 		sizer.Add(lbl_end_time, pos=(5, 0), flag=wx.LEFT | wx.TOP, border=5)
-		sizer.Add(self.txt_end, pos=(5, 1), flag=wx.EXPAND | wx.TOP | wx.RIGHT, border=5)
+		sizer.Add(self.txt_end, pos=(5, 1), flag= wx.TOP | wx.RIGHT, border=5)
 		sizer.Add(self.chk_match_volume, pos=(6, 0), span=(1, 2), flag=wx.LEFT | wx.TOP, border=5)
 		sizer.Add(self.chk_multilingual, pos=(7, 0), span=(1, 2), flag=wx.LEFT | wx.TOP, border=5)
 		sizer.Add(self.lb_voices, pos=(8, 0), span=(1, 1), flag=wx.EXPAND | wx.LEFT | wx.TOP, border=5)
-		sizer.Add(tab_control, pos=(8, 1), span=(1, 3), flag=wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, border=5)
+		sizer.Add(tab_control, pos=(8, 1), span=(1, 3), flag=wx.EXPAND | wx.ALL, border=5)
 		sizer.Add(btn_run_dub, pos=(9, 2), span=(1, 1), flag=wx.ALIGN_RIGHT | wx.RIGHT | wx.BOTTOM, border=5)
-
+		sizer.AddGrowableCol(1)
 		self.tab_voice_config.update_voice_fields(None)
 
 		self.SetSizerAndFit(sizer)
@@ -102,12 +103,19 @@ class GUI(wx.Panel):
 
 			def update_progress(progress=None):
 				status = progress['status'] if progress else "waiting"
-				if status == "finished":
+				if status == "downloading" and progress.get("fragment_count", False):
+					percent_complete = int(100 * (progress["fragment_index"] / progress["fragment_count"]))
+					wx.CallAfter(dialog.Update, percent_complete, f"{status}: {percent_complete}% \n {progress['info_dict']['fulltitle'] or ''}")
+				elif status == "complete":
 					if dialog:
 						wx.CallAfter(dialog.Destroy)
-				elif status == "downloading" and progress["total_bytes"]:
-					percent_complete = int(100 * (progress["downloaded_bytes"] / progress["total_bytes"]))
-					wx.CallAfter(dialog.Update, percent_complete, f"{status}: {percent_complete}% \n {progress['info_dict']['fulltitle'] or ''}")
+				elif status == "error":
+					wx.CallAfter(wx.MessageBox,
+						f"Failed to download video with the following Error:\n {str(progress['error'])}",
+						"Error",
+						wx.ICON_ERROR
+					)
+					update_progress({"status": "complete"})
 
 			threading.Thread(target=initialize_video).start()
 		else:

@@ -24,12 +24,13 @@ I had the idea to call the software Weeablind as a portmanteaux of Weeaboo (some
 
 ## Things to do
 
-- GUI tab to list and select audio / subtitle streams w/ FFMPEG
+- ~~GUI tab to list and select audio / subtitle streams w/ FFMPEG~~
 - ~~Move the tabs into their own classes~~
-- Add labels and screen reader landmarks to all the controls
-- Single speaker or multi speaker control switch~~
+- ~~Add labels and screen reader landmarks to all the controls~~
+- ~~Single speaker or multi speaker control switch~~
 - ~~Download YouTube video with Closed Captions~~
 - ~~GUI to select start and end time for dubbing~~
+- Throw up a Flask server on my website so you can try it with minimal features.
 - Use OCR to generate subtitles for videos that don't have sub streams
 - Use OCR for non-text based subtitles
 - Make a cool logo?
@@ -58,7 +59,7 @@ I had the idea to call the software Weeablind as a portmanteaux of Weeaboo (some
 - Add Support for PiperTTS
 
 ### Cloning
-
+- Create a cloning mode to select subtitles and export them to a dataset or wav compilation for Coqui XTTS
 - Use diaries and subtitles to isolate and build training datasets
 - Build a tool to streamline the manual creation of datasets
 

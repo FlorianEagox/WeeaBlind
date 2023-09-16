@@ -13,6 +13,7 @@ class Video:
 	def __init__(self, video_URL, loading_progress_hook=None):
 		self.start_time = self.end_time = 0
 		self.downloaded = False
+		self.subs = self.subs_adjusted = []
 		self.speech_diary = self.speech_diary_adjusted = None
 		self.load_video(video_URL, loading_progress_hook)
 
@@ -22,27 +23,35 @@ class Video:
 		sub_path = ""
 		if video_path.startswith("http"):
 			self.downloaded = True
-			video_path, sub_path, self.yt_sub_streams = self.download_video(video_path, progress_hook)
+			try:
+				video_path, sub_path, self.yt_sub_streams = self.download_video(video_path, progress_hook)
+			except: return
+			progress_hook({"status":"complete"})
 		else:
 			self.downloaded = False
 		self.file = video_path
-		self.subs = self.subs_adjusted = load_subs(utils.get_output_path(self.file, '.srt'), sub_path or video_path)
+		if not (self.downloaded and not sub_path):
+			self.subs = self.subs_adjusted = load_subs(utils.get_output_path(self.file, '.srt'), sub_path or video_path)
 		self.audio = AudioSegment.from_file(video_path)
 		self.duration = float(ffmpeg.probe(video_path)["format"]["duration"])
-		self.update_time(0, self.duration)
+		if self.subs:
+			self.update_time(0, self.duration)
 
-	def download_video(self, link, progress_hook=None):
+	def download_video(self, link, progress_hook=print):
 		options = {
 			'outtmpl': 'output/%(id)s.%(ext)s',
 			'writesubtitles': True,
 			"subtitleslangs": ["all"],
 			"progress_hooks": (progress_hook,)
 		}
-		# if progress_hook:
-			# options["progress_hooks"] = (progress_hook,)
-		with YoutubeDL(options) as ydl:
-			info = ydl.extract_info(link)
-			return ydl.prepare_filename(info), list(info["subtitles"].values())[0][-1]["filepath"], info["subtitles"]
+		try:
+			with YoutubeDL(options) as ydl:
+				info = ydl.extract_info(link)
+				return ydl.prepare_filename(info), list(info["subtitles"].values())[0][-1]["filepath"] if info["subtitles"] else None, info["subtitles"]
+		except Exception as e:
+			progress_hook({"status": "error", "error": e})
+			raise e
+
 
 	def update_time(self, start, end):
 		self.start_time = start

@@ -37,7 +37,7 @@ class SubtitleEntry(wx.Panel):
 		pass
 
 	def on_sample_button_click(self, event):
-		play(self.sub.dub_line_ram())
+		play(self.sub.dub_line_file(self.context.chk_match_volume.Value))
 
 class SubtitlesTab(wx.Panel):
 	def __init__(self, notebook, context):

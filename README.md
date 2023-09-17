@@ -23,7 +23,14 @@ This project is currently what some might call in alpha. The major, core functio
 I had the idea to call the software Weeablind as a portmanteaux of Weeaboo (someone a little too obsessed with anime), and blind. I might change it to something else in the future like Blindtaku, DubHub, or something similar and more catchy because the software can be used for far more than just anime.
 
 ## Things to do
-
+- A better filtering system for language detection. Maybe inclusive and exclusive or confidence threshhold
+- Find some less copyrighted multi-lingual / non-english content to display demos publicly
+- de-anglicanization it so the user can select their target language instead of just English
+- FIX PYDUB'S STUPID ARRAY DISTORTION so we don't have to perform 5 IO operations per dub!!!
+- A proper setup guide for all platforms
+- remove or fix the broken espeak implementation to be cross-platform
+- Uninitialized, singletons for heavy models upon startup (e.g. only intialize pyannote/speechbrain pipelines when needed)
+- Abstraction for singletons of Coqui voices using the same model to reduce memory footprint
 - ~~GUI tab to list and select audio / subtitle streams w/ FFMPEG~~
 - ~~Move the tabs into their own classes~~
 - ~~Add labels and screen reader landmarks to all the controls~~

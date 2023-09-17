@@ -23,11 +23,26 @@ class DubbedLine:
 	index: int
 	voice: int = 0
 
+	# This is highly inefficient as it writes and reads the same file many times
+	def dub_line_file(self, match_volume=True, output=False):
+		output_path = utils.get_output_path(str(self.index), '.wav', path='files')
+		tts_audio = app_state.speakers[self.voice].speak(self.text, output_path)
+		rate_adjusted = self.match_rate(tts_audio, self.end-self.start)
+		segment = AudioSegment.from_wav(rate_adjusted)
+		if match_volume:
+			segment = self.match_volume(app_state.video.get_snippet(self.start, self.end), segment)
+		if output:
+			segment.export(output_path, format='wav')
+		return segment
+
+	# This should ideally be a much more efficient way to dub.
+	# All functions should pass around numpy arrays rather than reading and writting files. For some reason though, it gives distroted results
 	def dub_line_ram(self, output=True):
 		output_path = utils.get_output_path(str(self.index), '.wav', path='files')
-		tts_audio = app_state.speakers[self.voice].speak(self.text)
+		tts_audio = app_state.speakers[self.voice].speak(self.text, output_path)
 		rate_adjusted = self.match_rate_ram(tts_audio, self.end-self.start)
 		data = rate_adjusted / np.max(np.abs(rate_adjusted))
+		# This causes some kind of wacky audio distrotion we NEED to fix ;C
 		audio_as_int = (data * (2**15)).astype(np.int16).tobytes()
 		segment = AudioSegment(
 			audio_as_int,
@@ -35,19 +50,17 @@ class DubbedLine:
 			sample_width=2,
 			channels=1
 		)
-		# segment = AudioSegment.from_wav(output_path)
-		result = segment #match_volume(get_snippet(sub.start, sub.end), segment)
 		if output:
-			result.export(output_path, format='wav')
-		return result
+			segment.export(output_path, format='wav')
+		return segment
 
-	def match_rate(self, target, source_duration, destination_path=None, clamp_min=0, clamp_max=4):
+	def match_rate(self, target_path, source_duration, destination_path=None, clamp_min=0, clamp_max=4):
 		if destination_path == None:
-			destination_path = target.split('.')[0] + '-timeshift.wav'
-		duration = float(ffmpeg.probe(target)["format"]["duration"])
+			destination_path = target_path.split('.')[0] + '-timeshift.wav'
+		duration = float(ffmpeg.probe(target_path)["format"]["duration"])
 		rate = duration*1/source_duration
 		rate = np.clip(rate, clamp_min, clamp_max)
-		with WavReader(target) as reader:
+		with WavReader(target_path) as reader:
 			with WavWriter(destination_path, reader.channels, reader.samplerate) as writer:
 				tsm = wsola(reader.channels, speed=rate)
 				tsm.run(reader, writer)
@@ -71,11 +84,11 @@ class DubbedLine:
 			rate_adjusted.close()
 			return outpath
 
-	def match_volume(source_snippet, target):
-		ratio = source_snippet.rms / (target.rms | 1)
-		# ratio = source_snippet.dBFS - target.dBFS
-		adjusted_audio = target.apply_gain(ratio)
-		# adjusted_audio = target + raio
+	def match_volume(self, source_snippet, target):
+		# ratio = source_snippet.rms / (target.rms | 1)
+		ratio = source_snippet.dBFS - target.dBFS
+		# adjusted_audio = target.apply_gain(ratio)
+		adjusted_audio = target + ratio
 		return adjusted_audio
 		# adjusted_audio.export(output_path, format="wav")
 

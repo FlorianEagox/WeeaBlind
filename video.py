@@ -49,6 +49,7 @@ class Video:
 				info = ydl.extract_info(link)
 				return ydl.prepare_filename(info), list(info["subtitles"].values())[0][-1]["filepath"] if info["subtitles"] else None, info["subtitles"]
 		except Exception as e:
+			print('AHHH\n',e,'\nAHHHHHH')
 			progress_hook({"status": "error", "error": e})
 			raise e
 

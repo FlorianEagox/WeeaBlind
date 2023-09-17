@@ -39,7 +39,6 @@ class GUI(wx.Panel):
 
 		self.chk_match_volume = wx.CheckBox(self, label="Match Speaker Volume")
 		self.chk_match_volume.SetValue(True)
-
 		self.chk_multilingual = wx.CheckBox(self, label="Multilingual")
 
 		self.lb_voices = wx.ListBox(self, choices=[speaker.name for speaker in app_state.speakers])
@@ -103,9 +102,11 @@ class GUI(wx.Panel):
 
 			def update_progress(progress=None):
 				status = progress['status'] if progress else "waiting"
-				if status == "downloading" and progress.get("fragment_count", False):
-					percent_complete = int(100 * (progress["fragment_index"] / progress["fragment_count"]))
-					wx.CallAfter(dialog.Update, percent_complete, f"{status}: {percent_complete}% \n {progress['info_dict']['fulltitle'] or ''}")
+				total = progress.get("fragment_count", progress.get("total_bytes", 0))
+				if status == "downloading" and total:
+					completed = progress.get("fragment_index", progress.get("downloaded_bytes", 1))
+					percent_complete = int(100 * (completed / total))
+					wx.CallAfter(dialog.Update, percent_complete, f"{status}: {percent_complete}% \n {progress['info_dict'].get('fulltitle', '')}")
 				elif status == "complete":
 					if dialog:
 						wx.CallAfter(dialog.Destroy)
@@ -120,9 +121,6 @@ class GUI(wx.Panel):
 			threading.Thread(target=initialize_video).start()
 		else:
 			initialize_video(False)
-
-		
-	
 
 	def change_crop_time(self, event):
 		app_state.video.update_time(

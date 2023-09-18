@@ -39,7 +39,6 @@ class GUI(wx.Panel):
 
 		self.chk_match_volume = wx.CheckBox(self, label="Match Speaker Volume")
 		self.chk_match_volume.SetValue(True)
-		self.chk_multilingual = wx.CheckBox(self, label="Multilingual")
 
 		self.lb_voices = wx.ListBox(self, choices=[speaker.name for speaker in app_state.speakers])
 		self.lb_voices.Bind(wx.EVT_LISTBOX, self.on_voice_change)
@@ -66,9 +65,8 @@ class GUI(wx.Panel):
 		sizer.Add(lbl_end_time, pos=(5, 0), flag=wx.LEFT | wx.TOP, border=5)
 		sizer.Add(self.txt_end, pos=(5, 1), flag= wx.TOP | wx.RIGHT, border=5)
 		sizer.Add(self.chk_match_volume, pos=(6, 0), span=(1, 2), flag=wx.LEFT | wx.TOP, border=5)
-		sizer.Add(self.chk_multilingual, pos=(7, 0), span=(1, 2), flag=wx.LEFT | wx.TOP, border=5)
-		sizer.Add(self.lb_voices, pos=(8, 0), span=(1, 1), flag=wx.EXPAND | wx.LEFT | wx.TOP, border=5)
-		sizer.Add(tab_control, pos=(8, 1), span=(1, 3), flag=wx.EXPAND | wx.ALL, border=5)
+		sizer.Add(self.lb_voices, pos=(7, 0), span=(1, 1), flag=wx.EXPAND | wx.LEFT | wx.TOP, border=5)
+		sizer.Add(tab_control, pos=(7, 1), span=(1, 3), flag=wx.EXPAND | wx.ALL, border=5)
 		sizer.Add(btn_run_dub, pos=(9, 2), span=(1, 1), flag=wx.ALIGN_RIGHT | wx.RIGHT | wx.BOTTOM, border=5)
 		sizer.AddGrowableCol(1)
 		self.tab_voice_config.update_voice_fields(None)
@@ -93,7 +91,7 @@ class GUI(wx.Panel):
 			self.tab_subtitles.create_entries()
 
 		def initialize_video(progress=True):
-			app_state.video = Video(video_path, update_progress if progress else None)
+			app_state.video = Video(video_path, update_progress if progress else print)
 			wx.CallAfter(update_ui)
 			wx.CallAfter(self.streams_tab.populate_streams, app_state.video.list_streams())
 

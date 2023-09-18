@@ -46,7 +46,7 @@ def find_nearest_speaker(diary, sub):
 
 
 def optimize_audio_diarization(video):
-	crop = video.crop_audio()
+	crop = video.crop_audio(True)
 	waveform, sample_rate = torchaudio.load(crop)
 	# Apply noise reduction
 	noise_reduce = T.Vad(sample_rate=sample_rate)

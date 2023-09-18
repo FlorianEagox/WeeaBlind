@@ -10,16 +10,17 @@ from pydub import AudioSegment
 from dub_line import load_subs, isnt_target_language
 import json
 class Video:
-	def __init__(self, video_URL, loading_progress_hook=None):
+	def __init__(self, video_URL, loading_progress_hook=print):
 		self.start_time = self.end_time = 0
 		self.downloaded = False
 		self.subs = self.subs_adjusted = []
+		self.background_track = self.vocal_track = None
 		self.speech_diary = self.speech_diary_adjusted = None
 		self.load_video(video_URL, loading_progress_hook)
 
 
 	# This is responsible for loading the app's audio and subtitles from a video file or YT link
-	def load_video(self, video_path, progress_hook=None):
+	def load_video(self, video_path, progress_hook=print):
 		sub_path = ""
 		if video_path.startswith("http"):
 			self.downloaded = True
@@ -31,7 +32,10 @@ class Video:
 			self.downloaded = False
 		self.file = video_path
 		if not (self.downloaded and not sub_path):
-			self.subs = self.subs_adjusted = load_subs(utils.get_output_path(self.file, '.srt'), sub_path or video_path)
+			try:
+				self.subs = self.subs_adjusted = load_subs(utils.get_output_path(self.file, '.srt'), sub_path or video_path)
+			except:
+				progress_hook({"status": "subless"})
 		self.audio = AudioSegment.from_file(video_path)
 		self.duration = float(ffmpeg.probe(video_path)["format"]["duration"])
 		if self.subs:
@@ -79,9 +83,10 @@ class Video:
 		return self.audio[start*1000:end*1000]
 	
 	# Crops the video's audio segment to reduce memory size
-	def crop_audio(self):
+	def crop_audio(self, isolated_vocals):
 		# ffmpeg -i .\saiki.mkv -vn -ss 84 -to 1325 crop.wav
-		output = utils.get_output_path(self.file, "-crop.wav")
+		source_file = self.vocal_track if isolated_vocals and self.vocal_track else self.file
+		output = utils.get_output_path(source_file, "-crop.wav")
 		(
 			ffmpeg
 			.input(self.file, ss=self.start_time, to=self.end_time)
@@ -115,29 +120,31 @@ class Video:
 			status = f"{i}/{len(self.subs_adjusted)}"
 			progress_hook(i, f"{status}: {sub.text}")
 			try:
-				line = sub.dub_line_ram()
+				line = sub.dub_line_file(False)
 				empty_audio = empty_audio.overlay(line, sub.start*1000)
 			except Exception as e:
 				print(e)
 				total_errors += 1
 		self.dub_track = empty_audio.export(utils.get_output_path(self.file, '-dubtrack.wav'), format="wav").name
 		progress_hook(i+1, "Mixing New Audio")
-		self.mix_av(mixing_ratio=4)
+		self.mix_av(mixing_ratio=1)
 		progress_hook(-1)
 		print(f"TOTAL TIME TAKEN: {time.process_time() - operation_start_time}")
 		# print(total_errors)
 
 	# This runs an ffmpeg command to combine the audio, video, and subtitles with a specific ratio of how loud to make the dubtrack
-	def mix_av(self, mixing_ratio=6, dubtrack=None, output_path=None):
+	def mix_av(self, mixing_ratio=1, dubtrack=None, output_path=None):
 		# i hate python, plz let me use self in func def
 		if not dubtrack: dubtrack = self.dub_track
 		if not output_path: output_path = utils.get_output_path(self.file, '-dubbed.mkv')
 
 		input_video = ffmpeg.input(self.file)
 		input_audio = input_video.audio
-		input_wav = ffmpeg.input(dubtrack).audio
+		if self.background_track:
+			input_audio = ffmpeg.input(self.background_track)
+		input_dub = ffmpeg.input(dubtrack).audio
 
-		mixed_audio = ffmpeg.filter([input_audio, input_wav], 'amix', duration='first', weights=f"1 {mixing_ratio}")
+		mixed_audio = ffmpeg.filter([input_audio, input_dub], 'amix', duration='first', weights=f"1 {mixing_ratio}")
 
 		output = (
 			# input_video['s']

@@ -27,6 +27,7 @@ I had the idea to call the software Weeablind as a portmanteaux of Weeaboo (some
 - Find some less copyrighted multi-lingual / non-english content to display demos publicly
 - de-anglicanization it so the user can select their target language instead of just English
 - FIX PYDUB'S STUPID ARRAY DISTORTION so we don't have to perform 5 IO operations per dub!!!
+- run a vocal isolation / remover on the source audio to remove / mitigate the original speakers?
 - A proper setup guide for all platforms
 - remove or fix the broken espeak implementation to be cross-platform
 - Uninitialized, singletons for heavy models upon startup (e.g. only intialize pyannote/speechbrain pipelines when needed)
@@ -49,7 +50,7 @@ I had the idea to call the software Weeablind as a portmanteaux of Weeaboo (some
 - Maybe support for magnet URLs or the arrLib to pirate media (who knows???)
 
 ### Diarization
-
+- Filter subtitles by the selected voice from the listbox
 - Select from multiple diarization models / pipelines
 - Optimize audio trakcs for diarizaiton by isolating lines speech based on subtitle timings
 - Investigate Diart?

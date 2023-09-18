@@ -4,9 +4,8 @@ import os
 from TTS.api import TTS
 import pyttsx3
 from espeakng import ESpeakNG
-from pydub import AudioSegment
-import ffmpeg
 import numpy as np
+from torch.cuda import is_available
 
 class Voice(abc.ABC):
 	class VoiceType(Enum):
@@ -80,8 +79,7 @@ class ESpeakVoice(Voice):
 class CoquiVoice(Voice):
 	def __init__(self, init_args=None, name="Coqui Voice"):
 		super().__init__(Voice.VoiceType.COQUI, init_args, name)
-		self.GPU = True
-		self.voice = TTS(gpu=self.GPU)
+		self.voice = TTS().to('cuda' if is_available() else 'cpu')
 		self.is_multispeaker = False
 		self.speaker = None
 

@@ -39,7 +39,7 @@ class DubbedLine:
 	# All functions should pass around numpy arrays rather than reading and writting files. For some reason though, it gives distroted results
 	def dub_line_ram(self, output=True):
 		output_path = utils.get_output_path(str(self.index), '.wav', path='files')
-		tts_audio = app_state.speakers[self.voice].speak(self.text, output_path)
+		tts_audio = app_state.speakers[self.voice].speak(self.text)
 		rate_adjusted = self.match_rate_ram(tts_audio, self.end-self.start)
 		data = rate_adjusted / np.max(np.abs(rate_adjusted))
 		# This causes some kind of wacky audio distrotion we NEED to fix ;C

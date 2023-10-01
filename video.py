@@ -2,6 +2,7 @@
 The Video class represents a reference to a video from either a file or web link. This class should implement the ncessary info to dub a video.
 """
 
+from io import StringIO
 import time
 import ffmpeg
 from yt_dlp import YoutubeDL
@@ -9,6 +10,10 @@ import utils
 from pydub import AudioSegment
 from dub_line import load_subs, isnt_target_language
 import json
+import numpy as np
+import librosa
+import soundfile as sf
+
 class Video:
 	def __init__(self, video_URL, loading_progress_hook=print):
 		self.start_time = self.end_time = 0
@@ -106,6 +111,43 @@ class Video:
 			progress_hook(i, f"{i}/{len(self.subs_adjusted)}: {sub.text}")
 		self.subs_adjusted = multi_lingual_subs
 		progress_hook(-1, "done")
+
+	# This funxion is is used to only get the snippets of the audio that appear in subs_adjusted after language filtration or cropping, irregardless of the vocal splitting.
+	# This should be called AFTER filter multilingual and BEFORE vocal isolation
+	# OKAY THERE HAS TO BE A FASTER WAY TO DO THIS X_X
+
+	# def isolate_subs(self):
+	# 	base = AudioSegment.silent(duration=self.duration*1000, frame_rate=self.audio.frame_rate, channels=self.audio.channels, frame_width=self.audio.frame_width)
+	# 	samples = np.array(base.get_array_of_samples())
+	# 	frame_rate = base.frame_rate
+		
+	# 	for sub in self.subs_adjusted:
+	# 		copy = np.array(self.get_snippet(sub.start, sub.end).get_array_of_samples())
+	# 		start_sample = int(sub.start * frame_rate)
+	# 		end_sample = int(sub.end * frame_rate)
+			
+	# 		# Ensure that the copy array has the same length as the region to replace
+	# 		copy = copy[:end_sample - start_sample]  # Trim if necessary
+			
+	# 		samples[start_sample:end_sample] = copy
+
+	# 	return AudioSegment(
+	# 		samples.tobytes(),
+	# 		frame_rate=frame_rate,
+	# 		sample_width=base.sample_width,  # Adjust sample_width as needed (2 bytes for int16)
+	# 		channels=base.channels
+	# 	)
+
+	def isolate_subs(self, subs):
+		# empty_audio = AudioSegment.silent(self.duration * 1000, frame_rate=self.audio.frame_rate)
+		empty_audio = self.audio
+		first_sub = subs[0]
+		empty_audio = empty_audio[0:first_sub.start].silent((first_sub.end-first_sub.start)*1000)
+		for i, sub in enumerate(subs[:-1]):
+			print(sub.text)
+			empty_audio = empty_audio[sub.end:subs[i+1].start].silent((subs[i+1].start-sub.end)*1000, frame_rate=empty_audio.frame_rate, channels=empty_audio.channels, sample_width=empty_audio.sample_width, frame_width=empty_audio.frame_width)
+
+		return empty_audio
 
 	def run_dubbing(self, progress_hook=None):
 		total_errors = 0

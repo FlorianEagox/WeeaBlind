@@ -98,11 +98,21 @@ def isnt_target_language(file, exclusion="English"):
 	prediction = language_identifier_model.classify_batch(signal)
 	return prediction[3][0].split(' ')[1] != exclusion
 
+def filter_junk(subs, minimum_duration=0.1, remove_repeats=True):
+	filtered = []
+	previous = ""
+	for sub in subs:
+		if (sub.end - sub.start) > minimum_duration:
+			if sub.text != previous:
+				filtered.append(sub)
+		previous = sub.text
+	return filtered
+
 # This function is designed to handle two cases
 #	1 We just have a path to an srt that we want to import
 #	2 You have a file containing subs, but not srt (a video file, a vtt, whatever)
 # 		In this case, we must extract or convert the subs to srt, and then read it in (export then import)
-def load_subs(import_path="", extract_subs_path=False):
+def load_subs(import_path="", extract_subs_path=False, filter=True):
 	if extract_subs_path: # For importing an external subtitles file
 		(
 			ffmpeg
@@ -113,7 +123,7 @@ def load_subs(import_path="", extract_subs_path=False):
 		)
 	with open(import_path, "r", encoding="utf-8") as f:
 		original_subs = list(srt.parse(f.read()))
-		return [
+		return filter_junk([
 			DubbedLine(
 				sub.start.total_seconds(),
 				sub.end.total_seconds(),
@@ -121,4 +131,4 @@ def load_subs(import_path="", extract_subs_path=False):
 				sub.index
 			)
 			for sub in original_subs
-		]
+		])

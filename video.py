@@ -104,12 +104,16 @@ class Video:
 
 	def filter_multilingual_subtiles(self, progress_hook=None):
 		multi_lingual_subs = []
+		removed_subs = []
 		for i, sub in enumerate(self.subs_adjusted):
 			snippet = self.get_snippet(sub.start, sub.end).export(utils.get_output_path('video_snippet', '.wav'), format="wav").name
 			if isnt_target_language(snippet):
 				multi_lingual_subs.append(sub)
+			else:
+				removed_subs.append(sub)
 			progress_hook(i, f"{i}/{len(self.subs_adjusted)}: {sub.text}")
 		self.subs_adjusted = multi_lingual_subs
+		self.subs_removed = removed_subs
 		progress_hook(-1, "done")
 
 	# This funxion is is used to only get the snippets of the audio that appear in subs_adjusted after language filtration or cropping, irregardless of the vocal splitting.
@@ -139,7 +143,7 @@ class Video:
 	# 	)
 
 	def isolate_subs(self, subs):
-		# empty_audio = AudioSegment.silent(self.duration * 1000, frame_rate=self.audio.frame_rate)
+		empty_audio = AudioSegment.silent(self.duration * 1000, frame_rate=self.audio.frame_rate)
 		empty_audio = self.audio
 		first_sub = subs[0]
 		empty_audio = empty_audio[0:first_sub.start].silent((first_sub.end-first_sub.start)*1000)

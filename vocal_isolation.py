@@ -19,12 +19,25 @@ def seperate_ram(video):
 	# Perform the separation :
 	# prediction = separator.separate(audio)
 
-def seperate_file(video):
+def seperate_file(video, isolate_subs=True):
 	source_audio_path = utils.get_output_path(video.file, '-audio.wav')
+	isolated_path = utils.get_output_path(video.file, '-isolate.wav')
 	separator.separate_to_file(
-		video.audio.export(source_audio_path, format="wav").name,
+		(video.audio).export(source_audio_path, format="wav").name,
 		'./output/',
 		filename_format='{filename}-{instrument}.{codec}'
 	)
-	video.background_track = utils.get_output_path(source_audio_path, '-accompaniment.wav')
-	video.vocal_track = utils.get_output_path(source_audio_path, '-vocals.wav')
+	# separator.separate_to_file(
+	# 	video.isolate_subs().export(source_audio_path, format="wav").name,
+	# 	'./output/',
+	# 	filename_format='{filename}-{instrument}.{codec}'
+	# )
+	background_track = utils.get_output_path(source_audio_path, '-accompaniment.wav')
+	# If we removed primary langauge subs from a multilingual video, we'll need to add them back to the background.
+	if video.subs_removed:
+		background = AudioSegment.from_file(background_track)
+		for sub in video.subs_removed:
+			background = background.overlay(video.get_snippet(sub.start, sub.end), int(sub.start*1000))
+		background.export(background_track, format="wav")
+	video.background_track = background_track
+	video.vocal_track = utils.get_output_path(isolated_path, '-vocals.wav')

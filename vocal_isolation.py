@@ -4,7 +4,8 @@ from pydub import AudioSegment
 import numpy as np
 import utils
 
-separator = Separator('spleeter:2stems')
+separator = None # Separator('spleeter:2stems')
+# I don't have any clue on how to make this work yet, just ignore for now. Ideally we'd never have to serialize the audio to wav and then rea read it but alas, bad implementations of PCM will be the death of me
 def seperate_ram(video):
 	audio_loader = adapter.AudioAdapter.default()
 	sample_rate = 44100
@@ -20,6 +21,9 @@ def seperate_ram(video):
 	# prediction = separator.separate(audio)
 
 def seperate_file(video, isolate_subs=True):
+	global separator
+	if not separator:
+		separator = Separator('spleeter:2stems')
 	source_audio_path = utils.get_output_path(video.file, '-audio.wav')
 	isolated_path = utils.get_output_path(video.file, '-isolate.wav')
 	separator.separate_to_file(

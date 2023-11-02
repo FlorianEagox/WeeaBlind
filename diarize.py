@@ -61,7 +61,9 @@ def optimize_audio_diarization(video):
 def run_diarization(video):
 	global pipeline # Probably should move this to app state?
 	if not pipeline:
-		pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization@2.1", use_auth_token="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")
+		pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization-3.0", use_auth_token="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")
+		import torch
+		pipeline.to(torch.device("cuda"))
 	output = utils.get_output_path(video.file, ".rttm")
 	optimized, sample_rate = optimize_audio_diarization(video)
 	diarization = pipeline({"waveform": optimized, "sample_rate": sample_rate})

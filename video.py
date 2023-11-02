@@ -18,7 +18,7 @@ class Video:
 	def __init__(self, video_URL, loading_progress_hook=print):
 		self.start_time = self.end_time = 0
 		self.downloaded = False
-		self.subs = self.subs_adjusted = []
+		self.subs = self.subs_adjusted = self.subs_removed = []
 		self.background_track = self.vocal_track = None
 		self.speech_diary = self.speech_diary_adjusted = None
 		self.load_video(video_URL, loading_progress_hook)
@@ -105,9 +105,12 @@ class Video:
 	def filter_multilingual_subtiles(self, progress_hook=None):
 		multi_lingual_subs = []
 		removed_subs = []
+		# Speechbrain is being a lil bitch about this path on Windows all of the sudden
+		snippet_path = "video_snippet.wav" # utils.get_output_path('video_snippet', '.wav')
+		print(snippet_path)
 		for i, sub in enumerate(self.subs_adjusted):
-			snippet = self.get_snippet(sub.start, sub.end).export(utils.get_output_path('video_snippet', '.wav'), format="wav").name
-			if isnt_target_language(snippet):
+			self.get_snippet(sub.start, sub.end).export(snippet_path, format="wav")
+			if isnt_target_language(snippet_path):
 				multi_lingual_subs.append(sub)
 			else:
 				removed_subs.append(sub)

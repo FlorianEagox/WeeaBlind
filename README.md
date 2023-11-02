@@ -44,7 +44,7 @@ The latest version of Python works on Linux, but Pyannote is a bit finnicky with
 To use the project, you'll need to clone the repository and install the dependencies in a virtual enviormonet.
 
 ```
-git clone git@github.com/FlorianEagox/weeablind/
+git clone https://github.com/FlorianEagox/weeablind.git
 cd weeablind
 python -m venv venv
 # Windows

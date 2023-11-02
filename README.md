@@ -38,7 +38,7 @@ https://visualstudio.microsoft.com/visual-cpp-build-tools/
 
 Coqui TTS and Pyannote diarization will also both perform better if you have CUDA set up on your system to use your GPU. This should work out of the box on Linux but getting it set up on Windows takes some doing. This [blog post](https://saturncloud.io/blog/how-to-run-mozilla-ttscoqui-tts-training-with-cuda-on-a-windows-system/) should walk you through the process. If you can't get it working, don't fret, you can still use them on your CPU.
 
-The latest version of Python works on Linux, but Pyannote is a bit finnicky with that. 3.8.10 seems to work fine on Windows
+The latest version of Python works on Linux, but Spleeter only works on 3.10 and Pyannote can be finicky with that too. 3.10 seems to work the best on on Windows. You can get it from the Microsoft Store.
 
 ### Setup from Source
 To use the project, you'll need to clone the repository and install the dependencies in a virtual enviormonet.
@@ -46,14 +46,17 @@ To use the project, you'll need to clone the repository and install the dependen
 ```
 git clone https://github.com/FlorianEagox/weeablind.git
 cd weeablind
-python -m venv venv
+python3.10 -m venv venv
 # Windows
 .\venv\Scripts\activate
 # Linux
 source ./venv/bin/activate
-
-pip install -r requirements.txt
 ```
+This project has a lot of dependencies, and pip can struggle with conflicts, so it's best to install from the lock file like this:
+```
+pip install -r requirements-win-310.txt --no-deps
+```
+You can try from the regular requirements file, but it can take a heck of a long time and requires some rejiggering sometimes. 
 
 Installing the dependencies can take a hot minute and uses a lot of space (~8 GB).
 

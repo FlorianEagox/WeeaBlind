@@ -8,7 +8,7 @@ import ffmpeg
 from yt_dlp import YoutubeDL
 import utils
 from pydub import AudioSegment
-from dub_line import load_subs, isnt_target_language
+from dub_line import load_subs
 import json
 import numpy as np
 import librosa
@@ -102,15 +102,14 @@ class Video:
 		)
 		return output
 
-	def filter_multilingual_subtiles(self, progress_hook=None):
+	def filter_multilingual_subtiles(self, progress_hook=print, exclusion="English"):
 		multi_lingual_subs = []
 		removed_subs = []
 		# Speechbrain is being a lil bitch about this path on Windows all of the sudden
 		snippet_path = "video_snippet.wav" # utils.get_output_path('video_snippet', '.wav')
-		print(snippet_path)
 		for i, sub in enumerate(self.subs_adjusted):
 			self.get_snippet(sub.start, sub.end).export(snippet_path, format="wav")
-			if isnt_target_language(snippet_path):
+			if sub.get_language(snippet_path) != exclusion:
 				multi_lingual_subs.append(sub)
 			else:
 				removed_subs.append(sub)
@@ -120,7 +119,7 @@ class Video:
 		progress_hook(-1, "done")
 
 	# This funxion is is used to only get the snippets of the audio that appear in subs_adjusted after language filtration or cropping, irregardless of the vocal splitting.
-	# This should be called AFTER filter multilingual and BEFORE vocal isolation
+	# This should be called AFTER filter multilingual and BEFORE vocal isolation. Not useful yet
 	# OKAY THERE HAS TO BE A FASTER WAY TO DO THIS X_X
 
 	# def isolate_subs(self):

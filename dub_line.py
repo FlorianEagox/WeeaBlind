@@ -11,7 +11,7 @@ from audiotsm.io.wav import WavReader, WavWriter
 from audiotsm.io.array import ArrayReader, ArrayWriter
 from speechbrain.pretrained import EncoderClassifier
 import numpy as np
-
+from language_detection import detect_language
 remove_xml = compile(r'<[^>]+>|\{[^}]+\}')
 language_identifier_model = None # EncoderClassifier.from_hparams(source="speechbrain/lang-id-voxlingua107-ecapa", savedir="tmp")
 
@@ -22,6 +22,7 @@ class DubbedLine:
 	text: str
 	index: int
 	voice: int = 0
+	language: str = ""
 
 	# This is highly inefficient as it writes and reads the same file many times
 	def dub_line_file(self, match_volume=True, output=False):
@@ -92,14 +93,11 @@ class DubbedLine:
 		return adjusted_audio
 		# adjusted_audio.export(output_path, format="wav")
 
+	def get_language(self, source_snippet):
+		if not self.language:
+			self.language = detect_language(source_snippet)
+		return self.language
 
-def isnt_target_language(file, exclusion="English"):
-	global language_identifier_model
-	if not language_identifier_model:
-		language_identifier_model = EncoderClassifier.from_hparams(source="speechbrain/lang-id-voxlingua107-ecapa", savedir="tmp")
-	signal = language_identifier_model.load_audio(file)
-	prediction = language_identifier_model.classify_batch(signal)
-	return prediction[3][0].split(' ')[1] != exclusion
 
 def filter_junk(subs, minimum_duration=0.1, remove_repeats=True):
 	filtered = []

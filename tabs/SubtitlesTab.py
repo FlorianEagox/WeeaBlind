@@ -19,16 +19,19 @@ class SubtitleEntry(wx.Panel):
 		entry_box = wx.StaticBox(self, label=f"{utils.seconds_to_timecode(self.start_time)} - {utils.seconds_to_timecode(self.end_time)}")
 		entry_sizer = wx.StaticBoxSizer(entry_box, wx.VERTICAL)
 
-		text_label = wx.StaticText(self, label=f"Speaker: {self.speaker}\nText: {self.text}")
-		entry_sizer.Add(text_label, 0, wx.EXPAND | wx.ALL, border=5)
+		lbl_text = wx.StaticText(self, label=f"Speaker: {self.speaker}\nText: {self.text}")
+		entry_sizer.Add(lbl_text, 0, wx.EXPAND | wx.ALL, border=5)
 
-		playback_button = wx.Button(self, label="Play")
-		playback_button.Bind(wx.EVT_BUTTON, self.on_playback_button_click)
-		entry_sizer.Add(playback_button, 0, wx.ALIGN_LEFT | wx.ALL, border=5)
+		lbl_language = wx.StaticText(self, label=f"Language: ${sub.language}")
+		entry_sizer.Add(lbl_language, 0, border=2)
 
-		sample_button = wx.Button(self, label="Sample")
-		sample_button.Bind(wx.EVT_BUTTON, self.on_sample_button_click)
-		entry_sizer.Add(sample_button, 0, wx.ALIGN_LEFT | wx.ALL, border=5)
+		btn_playback = wx.Button(self, label="Play")
+		btn_playback.Bind(wx.EVT_BUTTON, self.on_playback_button_click)
+		entry_sizer.Add(btn_playback, 0, wx.ALIGN_LEFT | wx.ALL, border=5)
+
+		btn_sample = wx.Button(self, label="Sample")
+		btn_sample.Bind(wx.EVT_BUTTON, self.on_sample_button_click)
+		entry_sizer.Add(btn_sample, 0, wx.ALIGN_LEFT | wx.ALL, border=5)
 
 		self.SetSizerAndFit(entry_sizer)
 
@@ -43,10 +46,16 @@ class SubtitlesTab(wx.Panel):
 	def __init__(self, notebook, context):
 		super().__init__(notebook)
 		self.context = context
+		self.subs_displayed = []
+		
+		lbl_lang_prompt = wx.StaticText(self, label="Remove all subs of this language from dubbing")
+		btn_lang_detect = wx.Button(self, label="Run Language Detection")
 		btn_language_filter = wx.Button(self, label="Filter Language")
 		btn_language_filter.Bind(wx.EVT_BUTTON, self.filter_language)
+		
 		btn_diarize = wx.Button(self, label="Run Diarization")
 		btn_diarize.Bind(wx.EVT_BUTTON, self.run_diarization)
+		
 		self.scroll_panel = wx.ScrolledWindow(self, style=wx.VSCROLL)
 		self.scroll_sizer = wx.BoxSizer(wx.VERTICAL)
 		self.scroll_panel.SetSizer(self.scroll_sizer)
@@ -80,7 +89,7 @@ class SubtitlesTab(wx.Panel):
 
 	def create_entries(self):
 		self.scroll_sizer.Clear(delete_windows=True)
-		for sub in app_state.video.subs_adjusted:
+		for sub in app_state.video.subs_adjusted: # self.subs_displayed:
 			diarization_entry = SubtitleEntry(
 				self.scroll_panel,
 				context=self.context,

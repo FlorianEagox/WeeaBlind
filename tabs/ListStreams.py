@@ -25,7 +25,6 @@ class ListStreamsTab(wx.Panel):
 	def populate_streams(self, streams):
 		# This code is some of the worst code, i hate it so much, but WX DOESN'T LET ME RESET THE CHOICES LIKE WITH **EVERY** OTHER LIST COMPONENT
 		_rb_audio = self.rb_audio
-		print(streams)
 		self.rb_audio = wx.RadioBox(self,
 			choices=[f"Stream #{stream['index']} ({stream.get('tags', {'language': 'unknown'}).get('language', 'unknown')})" for stream in streams["audio"]],
 			style=wx.RA_VERTICAL

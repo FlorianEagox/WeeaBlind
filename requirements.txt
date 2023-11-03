@@ -1,5 +1,5 @@
 tts # <-- Coqui TTS engine
-https://github.com/pyannote/pyannote-audio/archive/refs/heads/develop.zip
+pyannote.audio
 ffmpeg-python
 srt
 py-espeak-ng

@@ -21,10 +21,19 @@ class ConfigureVoiceTab(wx.Panel):
 		self.cb_tts_engines.Bind(wx.EVT_CHOICE, self.change_tts_engine)
 		self.add_control_with_label(grid_sizer, lbl_tts_engines, self.cb_tts_engines)
 
+		# This is for filtering coqui models by language
+		self.lbl_coqui_lang = wx.StaticText(self, label="Language")
+		self.cb_coqui_lang = wx.Choice(self, choices=[])
+		self.cb_coqui_lang.Bind(wx.EVT_CHOICE, self.change_model_language)
+		self.lbl_coqui_lang.Hide()
+		self.cb_coqui_lang.Hide()  # Hide by default, show only when multi-speaker Coqui model is selected
+		self.add_control_with_label(grid_sizer, self.lbl_coqui_lang, self.cb_coqui_lang)
+
 		lbl_model_options = wx.StaticText(self, label="Model Options")
 		self.cb_model_options = wx.Choice(self, choices=app_state.current_speaker.list_voice_options())
 		self.cb_model_options.Bind(wx.EVT_CHOICE, self.change_voice_params)
 		self.add_control_with_label(grid_sizer, lbl_model_options, self.cb_model_options)
+		
 
 		# This is for multispeaker coqui models. Should be hidden by default & shown when model is multispeaker
 		self.lbl_speaker_voices = wx.StaticText(self, label="Speaker Voices")
@@ -69,16 +78,26 @@ class ConfigureVoiceTab(wx.Panel):
 		self.parent.update_voices_list()
 
 	# determines weather to show a box for multispeaker coqui models
-	def show_multispeaker(self):
-		if app_state.sample_speaker.voice_type == Voice.VoiceType.COQUI and app_state.sample_speaker.is_multispeaker:
-			self.lbl_speaker_voices.Show()
-			self.cb_speaker_voices.Show()
-			self.cb_speaker_voices.Set(app_state.sample_speaker.list_speakers())
-			if app_state.sample_speaker.speaker:
-				self.cb_speaker_voices.SetStringSelection(app_state.sample_speaker.speaker)
+	def show_hidden(self):
+		if app_state.sample_speaker.voice_type == Voice.VoiceType.COQUI:
+				self.lbl_coqui_lang.Show()
+				self.cb_coqui_lang.Show()
+				self.cb_coqui_lang.Set(list(app_state.sample_speaker.langs))
+				self.cb_coqui_lang.Select(app_state.sample_speaker.langs.index(app_state.sample_speaker.selected_lang))
+				self.change_model_language(None)
+				if app_state.sample_speaker.is_multispeaker:
+					self.lbl_speaker_voices.Show()
+					self.cb_speaker_voices.Show()
+					self.cb_speaker_voices.Set(app_state.sample_speaker.list_speakers())
+					if app_state.sample_speaker.speaker:
+						self.cb_speaker_voices.SetStringSelection(app_state.sample_speaker.speaker)
+				else:
+					self.lbl_speaker_voices.Hide()
+					self.cb_speaker_voices.Hide()
 		else:
-			self.lbl_speaker_voices.Hide()
-			self.cb_speaker_voices.Hide()
+			self.lbl_coqui_lang.Hide()
+			self.cb_coqui_lang.Hide()
+
 		self.Layout()
 
 	# Populate the form with the current sample speaker's params
@@ -86,11 +105,11 @@ class ConfigureVoiceTab(wx.Panel):
 		self.txt_voice_name.Value = app_state.sample_speaker.name
 		self.cb_tts_engines.Select(list(Voice.VoiceType.__members__.values()).index(app_state.sample_speaker.voice_type))
 		self.cb_model_options.Set(app_state.sample_speaker.list_voice_options())
+		self.show_hidden()
 		try:
-			self.cb_model_options.Select(app_state.sample_speaker.list_voice_options().index(app_state.sample_speaker.voice_option))
+			self.cb_model_options.Select(self.cb_model_options.GetStrings().index(app_state.sample_speaker.voice_option))
 		except:
 			self.cb_model_options.Select(0)
-		self.show_multispeaker()
 
 	def change_tts_engine(self, event):
 		app_state.sample_speaker = Voice(list(Voice.VoiceType.__members__.values())[self.cb_tts_engines.GetSelection()])
@@ -117,5 +136,12 @@ class ConfigureVoiceTab(wx.Panel):
 		if app_state.sample_speaker.voice_type == Voice.VoiceType.COQUI and app_state.sample_speaker.is_multispeaker:
 			app_state.sample_speaker.set_voice_params(speaker=self.cb_speaker_voices.GetStringSelection())
 
-		self.show_multispeaker()
+		self.show_hidden()
 		self.SetCursor(wx.Cursor(wx.CURSOR_DEFAULT))
+
+	def change_model_language(self, event):
+		if self.cb_coqui_lang.GetSelection() == 0: # If they have "All Voices" selected, don't filter
+			self.cb_model_options.Set(app_state.sample_speaker.list_voice_options())
+		else:
+			self.cb_model_options.Set([model for model in app_state.sample_speaker.list_voice_options() if f"/{self.cb_coqui_lang.GetStringSelection()}/" in model])
+			app_state.sample_speaker.selected_lang = self.cb_coqui_lang.GetSelection()

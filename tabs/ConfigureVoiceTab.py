@@ -1,3 +1,4 @@
+import threading
 import app_state
 import wx
 from Voice import Voice
@@ -77,7 +78,7 @@ class ConfigureVoiceTab(wx.Panel):
 		app_state.current_speaker = app_state.sample_speaker
 		self.parent.update_voices_list()
 
-	# determines weather to show a box for multispeaker coqui models
+	# determines weather to show hidden models based on the state of the selected voice model/engine
 	def show_hidden(self):
 		if app_state.sample_speaker.voice_type == Voice.VoiceType.COQUI:
 				self.lbl_coqui_lang.Show()
@@ -120,6 +121,14 @@ class ConfigureVoiceTab(wx.Panel):
 		self.SetCursor(wx.Cursor(wx.CURSOR_WAIT))
 		self.Layout()
 		option_name = self.cb_model_options.GetStringSelection()
+		
+		def run_after():
+			if app_state.sample_speaker.is_multispeaker:
+				app_state.sample_speaker.set_voice_params(speaker=self.cb_speaker_voices.GetStringSelection())
+			self.update_voice_fields(event)
+			self.SetCursor(wx.Cursor(wx.CURSOR_DEFAULT))
+			dialog_download.Destroy()
+		
 		if app_state.sample_speaker.voice_type == Voice.VoiceType.COQUI:
 			if not app_state.sample_speaker.is_model_downloaded(option_name):
 				message_download = wx.MessageDialog(
@@ -130,18 +139,21 @@ class ConfigureVoiceTab(wx.Panel):
 				).ShowModal()
 				if(message_download != wx.ID_OK):
 					return
-		
+				dialog_download = wx.ProgressDialog("Downloading Model", "starting", 100, self)
+				self.Layout()
+				def download_progress(progress, status=None):
+					
+					if progress == -1:
+						wx.CallAfter(run_after())
+					else:
+						wx.CallAfter(dialog_download.Update, progress, status)
+				threading.Thread(target=app_state.sample_speaker.set_voice_params, kwargs={"voice": option_name, "progress": download_progress}).start()
 		app_state.sample_speaker.set_voice_params(voice=option_name)
-
-		if app_state.sample_speaker.voice_type == Voice.VoiceType.COQUI and app_state.sample_speaker.is_multispeaker:
-			app_state.sample_speaker.set_voice_params(speaker=self.cb_speaker_voices.GetStringSelection())
-
-		self.show_hidden()
-		self.SetCursor(wx.Cursor(wx.CURSOR_DEFAULT))
+		run_after()
 
 	def change_model_language(self, event):
 		if self.cb_coqui_lang.GetSelection() == 0: # If they have "All Voices" selected, don't filter
 			self.cb_model_options.Set(app_state.sample_speaker.list_voice_options())
 		else:
 			self.cb_model_options.Set([model for model in app_state.sample_speaker.list_voice_options() if f"/{self.cb_coqui_lang.GetStringSelection()}/" in model])
-			app_state.sample_speaker.selected_lang = self.cb_coqui_lang.GetSelection()
+			app_state.sample_speaker.selected_lang = self.cb_coqui_lang.GetStringSelection()

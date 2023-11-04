@@ -1,11 +1,16 @@
 from enum import Enum, auto
 import abc
 import os
+import re
+import threading
+from time import sleep
 from TTS.api import TTS
 import pyttsx3
 from espeakng import ESpeakNG
 import numpy as np
 from torch.cuda import is_available
+from contextlib import redirect_stdout
+import io
 
 class Voice(abc.ABC):
 	class VoiceType(Enum):
@@ -101,9 +106,36 @@ class CoquiVoice(Voice):
 				language= 'en' if self.voice.is_multi_lingual else None
 			))
 
-	def set_voice_params(self, voice=None, speaker=None):
+	def set_voice_params(self, voice=None, speaker=None, progress=None):
 		if voice and voice != self.voice_option:
-			self.voice.load_tts_model_by_name(voice)
+			if progress:
+				progress(0, "downloading")
+				self.voice.load_tts_model_by_name(voice)
+				progress(-1, "done!")
+				# threading.Thread(target=self.voice.load_tts_model_by_name, args=(voice,)).start()
+				#  Code for monitoring from STDOUT if I don't get around to making real progress hooks in the coqui repo
+				# def extract_progress_info(line):
+				# 	# extract params from this line:
+				# 	#  26%|████████████████████████████████████▊                                                                                                        | 120M/459M [00:18<01:05, 5.14MiB/s]
+				# 	progress_pattern = r'\d+%.*\[\d+[KMG]?/\d+[KMG]?\s.*\]'
+				# 	match = re.search(progress_pattern, line)
+				# 	if match:
+				# 		return match.group(0)
+				# 	return None
+				
+				# def monitor_progress():
+				# 	x = 0
+				# 	while x != -2:
+				# 	f = io.StringIO()
+				# 	with redirect_stdout(f):
+				# 		help(pow)
+				# 	s = f.getvalue()
+				# 		progress(x)
+				# 		if x == -1:
+				# 			x = -2
+				# 		sleep(0.1)
+			else:
+				self.voice.load_tts_model_by_name(voice)
 			self.voice_option = self.voice.model_name
 		self.is_multispeaker = self.voice.is_multi_speaker
 		self.speaker = speaker

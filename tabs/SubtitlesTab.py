@@ -50,8 +50,9 @@ class SubtitlesTab(wx.Panel):
 		
 		lbl_lang_prompt = wx.StaticText(self, label="Remove all subs of this language from dubbing")
 		btn_lang_detect = wx.Button(self, label="Run Language Detection")
+		btn_lang_detect.Bind(wx.EVT_BUTTON, self.detect_langs)
 		btn_language_filter = wx.Button(self, label="Filter Language")
-		btn_language_filter.Bind(wx.EVT_BUTTON, self.filter_language)
+		# btn_language_filter.Bind(wx.EVT_BUTTON, self.filter_language)
 		
 		btn_diarize = wx.Button(self, label="Run Diarization")
 		btn_diarize.Bind(wx.EVT_BUTTON, self.run_diarization)
@@ -62,6 +63,8 @@ class SubtitlesTab(wx.Panel):
 		self.scroll_panel.SetScrollRate(0, 20)
 
 		main_sizer = wx.BoxSizer(wx.VERTICAL)
+		main_sizer.Add(lbl_lang_prompt, 0, wx.CENTER)
+		main_sizer.Add(btn_lang_detect, 0, wx.CENTER)
 		main_sizer.Add(btn_language_filter, 0, wx.CENTER)
 		main_sizer.Add(btn_diarize, 0, wx.CENTER)
 		main_sizer.Add(self.scroll_panel, 1, wx.EXPAND | wx.ALL, border=10)
@@ -73,6 +76,19 @@ class SubtitlesTab(wx.Panel):
 		self.create_entries()
 		self.context.update_voices_list()
 	
+	def detect_langs(self, event):
+		dialog = wx.ProgressDialog("Filtering Subtitles", "starting", len(app_state.video.subs_adjusted), self)
+		def update_progress(progress, status):
+			def run_after():
+				self.create_entries()
+				self.context.update_voices_list()
+				dialog.Destroy()
+			if progress == -1:
+				return wx.CallAfter(run_after)
+			else:
+				wx.CallAfter(dialog.Update, progress, status)
+		threading.Thread(target=app_state.video.filter_multilingual_subtiles, args=(update_progress,)).start()
+
 	def filter_language(self, event):
 		dialog = wx.ProgressDialog("Filtering Subtitles", "starting", len(app_state.video.subs_adjusted), self)
 		def update_progress(progress, status):

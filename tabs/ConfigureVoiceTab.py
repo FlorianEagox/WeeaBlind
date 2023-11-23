@@ -140,16 +140,16 @@ class ConfigureVoiceTab(wx.Panel):
 				if(message_download != wx.ID_OK):
 					return
 				dialog_download = wx.ProgressDialog("Downloading Model", "starting", 100, self)
-				self.Layout()
+
 				def download_progress(progress, status=None):
-					
 					if progress == -1:
-						wx.CallAfter(run_after())
+						wx.CallAfter(run_after)
 					else:
-						wx.CallAfter(dialog_download.Update, progress, status)
+						wx.CallAfter(dialog_download.Update, progress, f"{progress}% - {status} \n {option_name}")
 				threading.Thread(target=app_state.sample_speaker.set_voice_params, kwargs={"voice": option_name, "progress": download_progress}).start()
-		app_state.sample_speaker.set_voice_params(voice=option_name)
-		run_after()
+		else:
+			app_state.sample_speaker.set_voice_params(voice=option_name)
+			run_after()
 
 	def change_model_language(self, event):
 		if self.cb_coqui_lang.GetSelection() == 0: # If they have "All Voices" selected, don't filter

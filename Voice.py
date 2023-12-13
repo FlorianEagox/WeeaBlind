@@ -90,16 +90,28 @@ class CoquiVoice(Voice):
 		self.is_multispeaker = False
 		self.speaker = None
 		self.speaker_wav = None
-
+		self.is_clonable = False
+		self.use_vc = False
+		self.speaker_wav = ""
 	def speak(self, text, file_path=None):
 		if file_path:
-			return self.voice.tts_to_file(
-				text,
-				file_path=file_path,
-				speaker=self.speaker,
-				language= 'en' if self.voice.is_multi_lingual else None,
-				speaker_wav=self.speaker_wav
-			)
+			if not self.use_vc:
+				return self.voice.tts_to_file(
+					text,
+					file_path=file_path,
+					speaker=self.speaker,
+					language='en' if self.voice.is_multi_lingual else None,
+					speaker_wav=self.speaker_wav
+				)
+			else:
+				self.voice.tts_with_vc_to_file(
+					text,
+					file_path=file_path,
+					speaker=self.speaker,
+					language='en' if self.voice.is_multi_lingual else None,
+					speaker_wav=self.speaker_wav
+				)
+				return file_path
 		else:
 			return np.array(self.voice.tts(
 				text,
@@ -107,7 +119,7 @@ class CoquiVoice(Voice):
 				language= 'en' if self.voice.is_multi_lingual else None
 			))
 
-	def set_voice_params(self, voice=None, speaker=None, speaker_wav=None, progress=None):
+	def set_voice_params(self, voice=None, speaker=None, speaker_wav=None, use_vc=None, progress=None):
 		if voice and voice != self.voice_option:
 			if progress:
 				progress(0, "downloading")
@@ -115,7 +127,7 @@ class CoquiVoice(Voice):
 				download_thread.start()
 				while(download_thread.is_alive()):
 					# I'll remove this check if they accept my PR c:
-					bar = manage.tqdm_progress if hasattr(manage, "tqdm_progress") else None
+					bar = manage.ModelManager.tqdm_progress if hasattr(manage.ModelManager, "tqdm_progress") else None
 					if bar:
 						progress_value = int(100*(bar.n / bar.total))
 						progress(progress_value, "downloading")
@@ -124,6 +136,13 @@ class CoquiVoice(Voice):
 			else:
 				self.voice.load_tts_model_by_name(voice)
 			self.voice_option = self.voice.model_name
+
+		if "xtts" in self.voice.model_name or self.use_vc:
+			self.is_clonable = True
+		if use_vc is not None:
+			self.use_vc = use_vc
+		if speaker_wav is not None:
+			self.speaker_wav = speaker_wav
 		self.is_multispeaker = self.voice.is_multi_speaker
 		self.speaker = speaker
 
@@ -153,7 +172,7 @@ class SystemVoice(Voice):
 	def set_voice_params(self, voice=None, pitch=None):
 		if voice:
 			self.voice.setProperty('voice', voice)
-			self.voice_option = self.voice.getProperty('voice')
+			self.voice_option = voice # self.voice.getProperty('voice')
 
 	def list_voice_options(self):
 		return [voice.name for voice in self.voice.getProperty('voices')]

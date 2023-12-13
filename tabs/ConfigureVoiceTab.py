@@ -44,13 +44,22 @@ class ConfigureVoiceTab(wx.Panel):
 		self.cb_speaker_voices.Hide()  # Hide by default, show only when multi-speaker Coqui model is selected
 		self.add_control_with_label(grid_sizer, self.lbl_speaker_voices, self.cb_speaker_voices)
 
+		# If you're using XTTS or voice conversion, provide a wav file to sample
+		self.chk_speaker_wav = wx.CheckBox(self, label="VC / Clone Sample")
+		self.chk_speaker_wav.Bind(wx.EVT_CHECKBOX, self.change_voice_params) # Set the voice to use VC
+		self.file_speaker_wav = wx.FilePickerCtrl(self, message="Select a voice sample to clone", wildcard="*.wav")
+		self.file_speaker_wav.Bind(wx.EVT_FILEPICKER_CHANGED, self.change_voice_params)
+		self.add_control_with_label(grid_sizer, self.chk_speaker_wav, self.file_speaker_wav)
+
+
+
 		lbl_sample_text = wx.StaticText(self, label="Sample Text")
 		self.txt_sample_text = wx.TextCtrl(self, value="I do be slurpin' that cheese without my momma's permission")
 		self.add_control_with_label(grid_sizer, lbl_sample_text, self.txt_sample_text)
 
 		self.btn_sample = wx.Button(self, label="▶️ Sample Voice")
 		self.btn_sample.Bind(wx.EVT_BUTTON, self.sample)
-
+		
 		self.btn_update_voice = wx.Button(self, label="Update Voice")
 		self.btn_update_voice.Bind(wx.EVT_BUTTON, self.update_voice)
 
@@ -85,6 +94,10 @@ class ConfigureVoiceTab(wx.Panel):
 				self.cb_coqui_lang.Show()
 				self.cb_coqui_lang.Set(list(app_state.sample_speaker.langs))
 				self.cb_coqui_lang.Select(app_state.sample_speaker.langs.index(app_state.sample_speaker.selected_lang))
+				self.chk_speaker_wav.Show()
+				self.file_speaker_wav.Show()
+				self.chk_speaker_wav.SetValue(app_state.sample_speaker.use_vc)
+				self.file_speaker_wav.SetPath(app_state.sample_speaker.speaker_wav)
 				self.change_model_language(None)
 				if app_state.sample_speaker.is_multispeaker:
 					self.lbl_speaker_voices.Show()
@@ -98,7 +111,10 @@ class ConfigureVoiceTab(wx.Panel):
 		else:
 			self.lbl_coqui_lang.Hide()
 			self.cb_coqui_lang.Hide()
-
+			self.chk_speaker_wav.Hide()
+			self.file_speaker_wav.Hide()
+			self.lbl_speaker_voices.Hide()
+			self.cb_speaker_voices.Hide()
 		self.Layout()
 
 	# Populate the form with the current sample speaker's params
@@ -123,12 +139,19 @@ class ConfigureVoiceTab(wx.Panel):
 		option_name = self.cb_model_options.GetStringSelection()
 		
 		def run_after():
-			if app_state.sample_speaker.is_multispeaker:
-				app_state.sample_speaker.set_voice_params(speaker=self.cb_speaker_voices.GetStringSelection())
+			app_state.sample_speaker.set_voice_params(voice=option_name)
+			if app_state.sample_speaker.voice_type == Voice.VoiceType.COQUI:
+				app_state.sample_speaker.set_voice_params(speaker_wav=self.file_speaker_wav.GetPath())
+				app_state.sample_speaker.set_voice_params(use_vc=self.chk_speaker_wav.IsChecked())
+				if app_state.sample_speaker.is_multispeaker:
+					app_state.sample_speaker.set_voice_params(speaker=self.cb_speaker_voices.GetStringSelection())
+				try:
+					dialog_download.Destroy()
+				except:
+					pass
 			self.update_voice_fields(event)
 			self.SetCursor(wx.Cursor(wx.CURSOR_DEFAULT))
-			dialog_download.Destroy()
-		
+					
 		if app_state.sample_speaker.voice_type == Voice.VoiceType.COQUI:
 			if not app_state.sample_speaker.is_model_downloaded(option_name):
 				message_download = wx.MessageDialog(
@@ -144,12 +167,11 @@ class ConfigureVoiceTab(wx.Panel):
 				def download_progress(progress, status=None):
 					if progress == -1:
 						wx.CallAfter(run_after)
-					else:
-						wx.CallAfter(dialog_download.Update, progress, f"{progress}% - {status} \n {option_name}")
+						return
+					wx.CallAfter(dialog_download.Update, progress, f"{progress}% - {status} \n {option_name}")
 				threading.Thread(target=app_state.sample_speaker.set_voice_params, kwargs={"voice": option_name, "progress": download_progress}).start()
-		else:
-			app_state.sample_speaker.set_voice_params(voice=option_name)
-			run_after()
+		wx.CallAfter(run_after)
+			
 
 	def change_model_language(self, event):
 		if self.cb_coqui_lang.GetSelection() == 0: # If they have "All Voices" selected, don't filter

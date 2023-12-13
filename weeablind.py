@@ -156,7 +156,7 @@ class GUI(wx.Panel):
 if __name__ == '__main__':
 	utils.create_output_dir()
 	app = wx.App(False)
-	frame = wx.Frame(None, wx.ID_ANY, utils.APP_NAME, size=(800, 800))
+	frame = wx.Frame(None, wx.ID_ANY, utils.APP_NAME, size=(800, 900))
 	frame.Center()
 	gui = GUI(frame)
 	frame.Show()

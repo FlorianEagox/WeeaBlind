@@ -84,12 +84,11 @@ class CoquiVoice(Voice):
 	def __init__(self, init_args=None, name="Coqui Voice"):
 		super().__init__(Voice.VoiceType.COQUI, init_args, name)
 		self.voice = TTS().to('cuda' if is_available() else 'cpu')
-		self.langs = ["All Languages"] + list({lang.split("/")[1] for lang in self.voice.list_models()})
+		self.langs = ["All Languages"] + list({lang.split("/")[1] for lang in self.voice.models})
 		self.langs.sort()
 		self.selected_lang = 'en'
 		self.is_multispeaker = False
 		self.speaker = None
-		self.speaker_wav = None
 		self.is_clonable = False
 		self.use_vc = False
 		self.speaker_wav = ""
@@ -147,7 +146,7 @@ class CoquiVoice(Voice):
 		self.speaker = speaker
 
 	def list_voice_options(self):
-		return self.voice.list_models()
+		return self.voice.models
 
 	def is_model_downloaded(self, model_name):
 		return os.path.exists(os.path.join(self.voice.manager.output_prefix, self.voice.manager._set_model_item(model_name)[1]))

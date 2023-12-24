@@ -1,8 +1,5 @@
 import wx
 import wx.adv
-from Voice import Voice
-from pydub import AudioSegment
-from pydub.playback import play
 from tabs.ConfigureVoiceTab import ConfigureVoiceTab
 from tabs.SubtitlesTab import SubtitlesTab
 from tabs.ListStreams import ListStreamsTab
@@ -10,8 +7,6 @@ import threading
 import utils
 from video import Video
 import app_state
-from video import Video
-import json
 
 class GUI(wx.Panel):
 	def __init__(self, parent):

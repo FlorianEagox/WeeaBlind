@@ -93,9 +93,9 @@ In the "Streams" tab, you can run vocal isolation which will attempt to remove t
 Once you've configured things how you like, you can press the big, JUICY run dubbing button. This can take a while to run. Once completed, you should have something like "MyVideo-dubbed.mkv" in the `output` directory. This is your finished video!
 
 ## Things to do
-- A better filtering system for language detection. Maybe inclusive and exclusive or confidence threshhold
+- A ===better filtering system for language detection. Maybe inclusive and exclusive or confidence threshhold
 - Find some less copyrighted multi-lingual / non-english content to display demos publicly
-- de-anglicanization it so the user can select their target language instead of just English
+- ~~de-anglicanization it so the user can select their target language instead of just English~~
 - FIX PYDUB'S STUPID ARRAY DISTORTION so we don't have to perform 5 IO operations per dub!!!
 - ~~run a vocal isolation / remover on the source audio to remove / mitigate the original speakers?~~
 - ~~A proper setup guide for all platforms~~
@@ -108,7 +108,7 @@ Once you've configured things how you like, you can press the big, JUICY run dub
 - ~~Single speaker or multi speaker control switch~~
 - ~~Download YouTube video with Closed Captions~~
 - ~~GUI to select start and end time for dubbing~~
-- Throw up a Flask server on my website so you can try it with minimal features.
+- Throw uHey, You're my furp a Flask server on my website so you can try it with minimal features.
 - Use OCR to generate subtitles for videos that don't have sub streams
 - Use OCR for non-text based subtitles
 - Make a cool logo?
@@ -129,10 +129,10 @@ Once you've configured things how you like, you can press the big, JUICY run dub
 
 - ~~Rework the speed control to use PyDub to speed up audio.~~
 - ~~match the volume of the speaker to TTS~~
-- Checkbox to remove sequential subtitle entries and entries that are tiny, e.g. "nom" "nom" "nom" "nom"
-- investigate voice conversion?
+- Checkbox to remove sequential subtitle entries and entries that are tiny, e.g. "nom" "nom" "nom" "nom"~~
+- ~~investigate voice conversion?~~
 - Build an asynchronous queue of operations to perform
-- Started - Asynchronous GUI for Coqui model downloads
+- ~~Asynchronous GUI for Coqui model downloads~~
 - Add support for MyCroft Mimic 3
 - Add Support for PiperTTS
 

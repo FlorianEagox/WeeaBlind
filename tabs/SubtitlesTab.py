@@ -22,7 +22,7 @@ class SubtitleEntry(wx.Panel):
 		lbl_text = wx.StaticText(self, label=f"Speaker: {self.speaker}\nText: {self.text}")
 		entry_sizer.Add(lbl_text, 0, wx.EXPAND | wx.ALL, border=5)
 
-		lbl_language = wx.StaticText(self, label=f"Language: ${sub.language}")
+		lbl_language = wx.StaticText(self, label=f"Language: {sub.language}")
 		entry_sizer.Add(lbl_language, 0, border=2)
 
 		btn_playback = wx.Button(self, label="Play")
@@ -47,26 +47,33 @@ class SubtitlesTab(wx.Panel):
 		super().__init__(notebook)
 		self.context = context
 		self.subs_displayed = []
+		tb_controls = wx.ToolBar(self)
 		
-		lbl_lang_prompt = wx.StaticText(self, label="Remove all subs of this language from dubbing")
-		btn_lang_detect = wx.Button(self, label="Run Language Detection")
+		lbl_lang_prompt = wx.StaticText(tb_controls, label="Remove all subs of this language from dubbing")
+		btn_lang_detect = wx.Button(tb_controls, label="Run Language Detection")
 		btn_lang_detect.Bind(wx.EVT_BUTTON, self.detect_langs)
-		btn_language_filter = wx.Button(self, label="Filter Language")
+		btn_language_filter = wx.Button(tb_controls, label="Filter Language")
+		btn_language_filter.Bind(wx.EVT_BUTTON, self.remove_langs)
 		# btn_language_filter.Bind(wx.EVT_BUTTON, self.filter_language)
 		
-		btn_diarize = wx.Button(self, label="Run Diarization")
+		btn_diarize = wx.Button(tb_controls, label="Run Diarization")
 		btn_diarize.Bind(wx.EVT_BUTTON, self.run_diarization)
+
+		self.lb_detected_langs = wx.CheckListBox(tb_controls, choices=["en", "es", "jp"])
 		
 		self.scroll_panel = wx.ScrolledWindow(self, style=wx.VSCROLL)
 		self.scroll_sizer = wx.BoxSizer(wx.VERTICAL)
 		self.scroll_panel.SetSizer(self.scroll_sizer)
 		self.scroll_panel.SetScrollRate(0, 20)
+		tb_controls.AddControl(btn_lang_detect)
+		tb_controls.AddControl(lbl_lang_prompt)
+		tb_controls.AddControl(self.lb_detected_langs)
+		tb_controls.AddControl(btn_language_filter)
+		tb_controls.AddControl(btn_diarize)
+		tb_controls.Realize()
 
 		main_sizer = wx.BoxSizer(wx.VERTICAL)
-		main_sizer.Add(lbl_lang_prompt, 0, wx.CENTER)
-		main_sizer.Add(btn_lang_detect, 0, wx.CENTER)
-		main_sizer.Add(btn_language_filter, 0, wx.CENTER)
-		main_sizer.Add(btn_diarize, 0, wx.CENTER)
+		main_sizer.Add(tb_controls, 0, wx.CENTER)
 		main_sizer.Add(self.scroll_panel, 1, wx.EXPAND | wx.ALL, border=10)
 
 		self.SetSizerAndFit(main_sizer)
@@ -80,6 +87,7 @@ class SubtitlesTab(wx.Panel):
 		dialog = wx.ProgressDialog("Filtering Subtitles", "starting", len(app_state.video.subs_adjusted), self)
 		def update_progress(progress, status):
 			def run_after():
+				self.update_langs()
 				self.create_entries()
 				self.context.update_voices_list()
 				dialog.Destroy()
@@ -114,3 +122,13 @@ class SubtitlesTab(wx.Panel):
 			self.scroll_sizer.Add(diarization_entry, 0, wx.EXPAND | wx.ALL, border=5)
 
 		self.Layout()
+
+	def update_langs(self):
+		self.lb_detected_langs.Clear()
+		self.lb_detected_langs.AppendItems(list(set(sub.language for sub in app_state.video.subs_adjusted)))
+		self.Layout()
+
+	def remove_langs(self, event):
+		# maybe move this into the video class?
+		app_state.video.subs_adjusted = [sub for sub in app_state.video.subs_adjusted if not sub.language in self.lb_detected_langs.GetCheckedStrings()]
+		self.create_entries()

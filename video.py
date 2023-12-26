@@ -217,3 +217,10 @@ class Video:
 		audio_path = utils.get_output_path(self.file, f"-${stream_index}.wav")
 		ffmpeg.input(self.file).output(audio_path, map=f"0:a:{stream_index}").run(overwrite_output=True)
 		self.audio = AudioSegment.from_file(audio_path)
+
+	def export_clone(self, snippets, path):
+		empty_audio = AudioSegment.empty()
+		for snippet in snippets:
+			empty_audio += AudioSegment.silent()
+			empty_audio += self.get_snippet(snippet.start, snippet.end)
+		empty_audio.export(path, "wav")

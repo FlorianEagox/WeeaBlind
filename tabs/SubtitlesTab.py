@@ -33,6 +33,9 @@ class SubtitleEntry(wx.Panel):
 		btn_sample.Bind(wx.EVT_BUTTON, self.on_sample_button_click)
 		entry_sizer.Add(btn_sample, 0, wx.ALIGN_LEFT | wx.ALL, border=5)
 
+		self.chk_mark_export = wx.CheckBox(self, label="Mark For Cloning")
+		entry_sizer.Add(self.chk_mark_export, 0, wx.ALIGN_LEFT)
+
 		self.SetSizerAndFit(entry_sizer)
 
 	def on_playback_button_click(self, event):
@@ -54,7 +57,8 @@ class SubtitlesTab(wx.Panel):
 		btn_lang_detect.Bind(wx.EVT_BUTTON, self.detect_langs)
 		btn_language_filter = wx.Button(tb_controls, label="Filter Language")
 		btn_language_filter.Bind(wx.EVT_BUTTON, self.remove_langs)
-		# btn_language_filter.Bind(wx.EVT_BUTTON, self.filter_language)
+		btn_export_clone = wx.Button(tb_controls, label="Export Clone")
+		btn_export_clone.Bind(wx.EVT_BUTTON, self.export_clone)
 		
 		btn_diarize = wx.Button(tb_controls, label="Run Diarization")
 		btn_diarize.Bind(wx.EVT_BUTTON, self.run_diarization)
@@ -70,6 +74,7 @@ class SubtitlesTab(wx.Panel):
 		tb_controls.AddControl(self.lb_detected_langs)
 		tb_controls.AddControl(btn_language_filter)
 		tb_controls.AddControl(btn_diarize)
+		tb_controls.AddControl(btn_export_clone)
 		tb_controls.Realize()
 
 		main_sizer = wx.BoxSizer(wx.VERTICAL)
@@ -119,6 +124,7 @@ class SubtitlesTab(wx.Panel):
 				context=self.context,
 				sub=sub
 			)
+			diarization_entry.SetRefData
 			self.scroll_sizer.Add(diarization_entry, 0, wx.EXPAND | wx.ALL, border=5)
 
 		self.Layout()
@@ -131,4 +137,14 @@ class SubtitlesTab(wx.Panel):
 	def remove_langs(self, event):
 		# maybe move this into the video class?
 		app_state.video.subs_adjusted = [sub for sub in app_state.video.subs_adjusted if not sub.language in self.lb_detected_langs.GetCheckedStrings()]
+		self.update_langs()
 		self.create_entries()
+	
+	def export_clone(self, event):
+		dlg_save = wx.FileDialog(self, "Save a new clone sample", "./output", "voice_sample.wav", "*.wav", wx.FD_SAVE)
+		if dlg_save.ShowModal() == wx.ID_OK:
+			app_state.video.export_clone(
+				[child.GetWindow().sub for child in self.scroll_sizer.GetChildren() if child.GetWindow().chk_mark_export.IsChecked()],
+				dlg_save.GetPath()
+			)
+		dlg_save.Destroy()

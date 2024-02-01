@@ -1,6 +1,9 @@
 import wx
 import app_state
 import vocal_isolation
+import video_ocr
+import dub_line
+
 class ListStreamsTab(wx.Panel):
 	def __init__(self, parent, context):
 		super().__init__(parent)
@@ -13,9 +16,13 @@ class ListStreamsTab(wx.Panel):
 		btn_remove_vocals = wx.Button(self, label="Remove vocals")
 		btn_remove_vocals.Bind(wx.EVT_BUTTON, self.remove_vocals)
 
+		btn_ocr = wx.Button(self, label="Extract subs with OCR")
+		btn_ocr.Bind(wx.EVT_BUTTON, self.run_ocr)
+
 		# Create a sizer for layout
 		sizer = wx.BoxSizer(wx.VERTICAL)
 		sizer.Add(btn_remove_vocals, 0, wx.ALL | wx.CENTER, 5)
+		sizer.Add(btn_ocr, 0, wx.ALL | wx.CENTER, 5)
 		sizer.Add(wx.StaticText(self, label="Select an Audio Stream:"), 0, wx.ALL, 5)
 		sizer.Add(self.rb_audio, 0, wx.ALL | wx.EXPAND, 5)
 		sizer.Add(wx.StaticText(self, label="Select a Subtitle Stream:"), 0, wx.ALL, 5)
@@ -50,6 +57,12 @@ class ListStreamsTab(wx.Panel):
 	def on_subtitle_selection(self, event, streams):
 		# app_state.video.change_subs(stream_index=streams['subs'][self.rb_audio.GetSelection()])
 		app_state.video.change_subs(stream_index=self.rb_subs.GetSelection())
+		self.context.tab_subtitles.create_entries()
+	
+	def run_ocr(self, event):
+		frames = video_ocr.perform_video_ocr(app_state.video.file, sample_rate=2)
+		ocr_subs = [dub_line.DubbedLine(frame.ts_second, -1, frame.text, index) for index, frame in enumerate(frames)]
+		app_state.video.subs_adjusted = ocr_subs
 		self.context.tab_subtitles.create_entries()
 	
 	def remove_vocals(self, event):

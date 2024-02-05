@@ -2,7 +2,8 @@ tts # <-- Coqui TTS engine
 pyannote.audio
 ffmpeg-python
 srt
-py-espeak-ng
+# my additions to the espeakng package adding features for this program
+espeakng @ git+https://github.com/FlorianEagox/espeakng-python@69725deda9bf041200f30b302b54f1f4452e9d9b
 pydub
 # pyAudio # <--- Needed on Windows, breaks on Linux
 -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-22.04

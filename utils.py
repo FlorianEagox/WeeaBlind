@@ -7,7 +7,7 @@ from torch.cuda import is_available
 
 APP_NAME = "WeeaBlind"
 test_video_name = "./output/download.webm"
-default_sample_path = "./output/sample.wav"
+
 test_start_time = 94
 test_end_time =  1324
 gpu_detected = is_available()
@@ -21,6 +21,8 @@ def get_output_path(input, suffix, prefix='', path=''):
 	filename = os.path.basename(input)
 	filename_without_extension = os.path.splitext(filename)[0]
 	return os.path.join(os.path.dirname(os.path.abspath(__file__)), 'output', path, f"{prefix}{filename_without_extension}{suffix}")
+
+default_sample_path = get_output_path("sample", ".wav")
 
 def timecode_to_seconds(timecode):
 	parts = list(map(float, timecode.split(':')))
@@ -50,4 +52,4 @@ def find_nearest(array, value):
 def sampleVoice(text, output=default_sample_path):
 	play(AudioSegment.from_file(app_state.sample_speaker.speak(text, output)))
 
-snippet_export_path = get_output_path("video_snippet", "wav")
+snippet_export_path = get_output_path("video_snippet", ".wav")

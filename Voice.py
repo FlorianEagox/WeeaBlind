@@ -6,7 +6,7 @@ from time import sleep
 from TTS.api import TTS
 from TTS.utils import manage
 import pyttsx3
-from espeakng import ESpeakNG
+import espeakng
 import numpy as np
 from torch.cuda import is_available
 import time
@@ -29,6 +29,7 @@ class Voice(abc.ABC):
 			return super().__new__(cls)
 
 	def __init__(self, voice_type, init_args=[], name="Unnamed"):
+		self.voice = None
 		self.voice_type = voice_type
 		self.name = name
 		self.voice_option = None
@@ -61,24 +62,21 @@ class Voice(abc.ABC):
 class ESpeakVoice(Voice):
 	def __init__(self, init_args=[], name="Unnamed"):
 		super().__init__(Voice.VoiceType.ESPEAK, init_args, name)
-		self.set_voice_params(init_args)
+		self.voice = espeakng.Speaker()
+		self.voice_option = self.voice.voice
 
 	def speak(self, text, file_name):
-		self.voice.synth_wav(text, file_name)
-
-	def set_speed(self, speed):
-		# current_speaker.set_speed(60*int((len(text.split(' ')) / (sub.end.total_seconds() - sub.start.total_seconds()))))
-		self.voice.speed = speed
+		self.voice.say(text, export_path=file_name)
+		return file_name
 
 	def set_voice_params(self, voice=None, pitch=None):
 		if voice:
-			self.voice.voice = voice
+			self.voice.voice = self.voice_option = voice
 		if pitch:
 			self.voice.pitch = pitch
 
 	def list_voice_options(self):
-		# Optionally, you can return available voice options for ESpeak here
-		pass
+		return ["af","sq","am","ar","an","hy","hyw","as","az","ba","cu","eu","be","bn","bpy","bs","bg","my","ca","chr","yue","hak","haw","cmn","hr","cs","da","nl","en-us","en","en-029","en-gb-x-gbclan","en-gb-x-rp","en-gb-scotland","en-gb-x-gbcwmd","eo","et","fa","fa-latn","fi","fr-be","fr","fr-ch","ga","gd","ka","de","grc","el","kl","gn","gu","ht","he","hi","hu","is","id","ia","io","it","ja","kn","kok","ko","ku","kk","ky","la","lb","ltg","lv","lfn","lt","jbo","mi","mk","ms","ml","mt","mr","nci","ne","nb","nog","or","om","pap","py","pl","pt-br","qdb","qu","quc","qya","pt","pa","piqd","ro","ru","ru-lv","uk","sjn","sr","tn","sd","shn","si","sk","sl","smj","es","es-419","sw","sv","ta","th","tk","tt","te","tr","ug","ur","uz","vi-vn-x-central","vi","vi-vn-x-south","cy"]
 
 class CoquiVoice(Voice):
 	def __init__(self, init_args=None, name="Coqui Voice"):

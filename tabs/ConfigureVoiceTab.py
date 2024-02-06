@@ -3,6 +3,7 @@ import app_state
 import wx
 from Voice import Voice
 import utils
+import feature_support
 
 class ConfigureVoiceTab(wx.Panel):
 	def __init__(self, notebook, parent):
@@ -18,7 +19,9 @@ class ConfigureVoiceTab(wx.Panel):
 		self.add_control_with_label(grid_sizer, lbl_voice_name, self.txt_voice_name)
 
 		lbl_tts_engines = wx.StaticText(self, label="TTS Engine")
-		self.cb_tts_engines = wx.Choice(self, choices=[str(val) for val in Voice.VoiceType])
+		self.available_engines = [engine for engine in Voice.VoiceType if not (engine == Voice.VoiceType.COQUI and not feature_support.coqui_supported)]
+
+		self.cb_tts_engines = wx.Choice(self, choices=[engine.value for engine in self.available_engines])
 		self.cb_tts_engines.Bind(wx.EVT_CHOICE, self.change_tts_engine)
 		self.add_control_with_label(grid_sizer, lbl_tts_engines, self.cb_tts_engines)
 
@@ -120,7 +123,8 @@ class ConfigureVoiceTab(wx.Panel):
 	# Populate the form with the current sample speaker's params
 	def update_voice_fields(self, event):
 		self.txt_voice_name.Value = app_state.sample_speaker.name
-		self.cb_tts_engines.Select(list(Voice.VoiceType.__members__.values()).index(app_state.sample_speaker.voice_type))
+		self.cb_tts_engines.Select(self.available_engines.index(app_state.sample_speaker.voice_type))
+
 		self.cb_model_options.Set(app_state.sample_speaker.list_voice_options())
 		self.show_hidden()
 		try:
@@ -129,7 +133,7 @@ class ConfigureVoiceTab(wx.Panel):
 			self.cb_model_options.Select(0)
 
 	def change_tts_engine(self, event):
-		app_state.sample_speaker = Voice(list(Voice.VoiceType.__members__.values())[self.cb_tts_engines.GetSelection()])
+		app_state.sample_speaker = Voice(self.available_engines[self.cb_tts_engines.GetSelection()])
 		self.update_voice_fields(event)
 
 	# Update the sample speaker to the specification

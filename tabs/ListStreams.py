@@ -1,8 +1,10 @@
 import wx
 import app_state
 import vocal_isolation
-import video_ocr
 import dub_line
+import feature_support
+if feature_support.ocr_supported:
+	import video_ocr
 
 class ListStreamsTab(wx.Panel):
 	def __init__(self, parent, context):
@@ -15,10 +17,11 @@ class ListStreamsTab(wx.Panel):
 
 		btn_remove_vocals = wx.Button(self, label="Remove vocals")
 		btn_remove_vocals.Bind(wx.EVT_BUTTON, self.remove_vocals)
+		if not feature_support.vocal_isolation_supported: btn_remove_vocals.Disable()
 
 		btn_ocr = wx.Button(self, label="Extract subs with OCR")
 		btn_ocr.Bind(wx.EVT_BUTTON, self.run_ocr)
-
+		if not feature_support.ocr_supported: btn_ocr.Disable()
 		# Create a sizer for layout
 		sizer = wx.BoxSizer(wx.VERTICAL)
 		sizer.Add(btn_remove_vocals, 0, wx.ALL | wx.CENTER, 5)

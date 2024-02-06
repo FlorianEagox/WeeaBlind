@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from Voice import Voice
 import ffmpeg
 import utils
 import app_state
@@ -9,9 +8,9 @@ from pydub import AudioSegment
 from audiotsm import wsola
 from audiotsm.io.wav import WavReader, WavWriter
 from audiotsm.io.array import ArrayReader, ArrayWriter
-from speechbrain.pretrained import EncoderClassifier
 import numpy as np
 from language_detection import detect_language
+
 remove_xml = compile(r'<[^>]+>|\{[^}]+\}')
 language_identifier_model = None # EncoderClassifier.from_hparams(source="speechbrain/lang-id-voxlingua107-ecapa", savedir="tmp")
 

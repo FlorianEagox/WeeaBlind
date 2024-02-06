@@ -1,18 +1,12 @@
 """
 The Video class represents a reference to a video from either a file or web link. This class should implement the ncessary info to dub a video.
 """
-
-from io import StringIO
 import time
 import ffmpeg
 from yt_dlp import YoutubeDL
 import utils
 from pydub import AudioSegment
 from dub_line import load_subs
-import json
-import numpy as np
-import librosa
-import soundfile as sf
 
 class Video:
 	def __init__(self, video_URL, loading_progress_hook=print):

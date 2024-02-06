@@ -1,5 +1,8 @@
-from spleeter.separator import Separator
-from spleeter.audio import adapter
+import feature_support
+
+if feature_support.vocal_isolation_supported:
+	from spleeter.separator import Separator
+	from spleeter.audio import adapter
 from pydub import AudioSegment
 import numpy as np
 import utils

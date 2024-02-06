@@ -1,15 +1,16 @@
-from enum import Enum, auto
+from enum import Enum
 import abc
 import os
 import threading
-from time import sleep
-from TTS.api import TTS
-from TTS.utils import manage
+import feature_support
 import pyttsx3
 import espeakng
 import numpy as np
 from torch.cuda import is_available
 import time
+if feature_support.coqui_supported:
+	from TTS.api import TTS
+	from TTS.utils import manage
 
 class Voice(abc.ABC):
 	class VoiceType(Enum):

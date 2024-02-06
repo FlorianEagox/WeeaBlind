@@ -1,6 +1,8 @@
 # This is used to detect the spoken language in an audio file
 # I wanted to abstract it to it's own file, just like vocal isolation & diarization
-from speechbrain.pretrained import EncoderClassifier
+import feature_support
+if feature_support.language_detection_supported:
+	from speechbrain.pretrained import EncoderClassifier
 
 language_identifier_model = None
 

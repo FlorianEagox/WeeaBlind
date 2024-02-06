@@ -4,6 +4,7 @@ from pydub.playback import play
 import wx
 import threading
 import diarize
+import feature_support
 
 class SubtitleEntry(wx.Panel):
 	def __init__(self, parent, context, sub):
@@ -57,14 +58,19 @@ class SubtitlesTab(wx.Panel):
 		btn_lang_detect.Bind(wx.EVT_BUTTON, self.detect_langs)
 		btn_language_filter = wx.Button(tb_controls, label="Filter Language")
 		btn_language_filter.Bind(wx.EVT_BUTTON, self.remove_langs)
+		
 		btn_export_clone = wx.Button(tb_controls, label="Export Clone")
 		btn_export_clone.Bind(wx.EVT_BUTTON, self.export_clone)
 		
 		btn_diarize = wx.Button(tb_controls, label="Run Diarization")
 		btn_diarize.Bind(wx.EVT_BUTTON, self.run_diarization)
-
+		if not feature_support.diarization_supported: btn_diarize.Disable()
 		self.lb_detected_langs = wx.CheckListBox(tb_controls, choices=["en", "es", "jp"])
-		
+		if not feature_support.language_detection_supported:
+			btn_lang_detect.Disable()
+			self.lb_detected_langs.Disable()
+			btn_language_filter.Disable()
+
 		self.scroll_panel = wx.ScrolledWindow(self, style=wx.VSCROLL)
 		self.scroll_sizer = wx.BoxSizer(wx.VERTICAL)
 		self.scroll_panel.SetSizer(self.scroll_sizer)

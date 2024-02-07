@@ -13,3 +13,4 @@ yt-dlp # <-- Downloading YT vids
 audiotsm # <-- Audio timestretching
 speechbrain # <-- Audio Language Identification
 spleeter # <-- Vocal / Background isolation
+git+https://github.com/casics/nostril.git # <--- GOBBLE

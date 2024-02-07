@@ -13,7 +13,7 @@ language_detection_supported = is_module_available("speechbrain")
 vocal_isolation_supported = is_module_available("spleeter")
 downloads_supported = is_module_available("yt-dlp")
 espeak_supported = "espeak" in os.getenv('PATH').lower()
-coqui_supported = is_module_available("TTS") and espeak_supported
+coqui_supported = is_module_available("TTS") # and espeak_supported
 
 # TESTING
 # language_detection_supported = coqui_supported = False

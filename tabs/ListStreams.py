@@ -2,9 +2,11 @@ import wx
 import app_state
 import vocal_isolation
 import dub_line
+import re
 import feature_support
 if feature_support.ocr_supported:
 	import video_ocr
+from nostril import nonsense
 
 class ListStreamsTab(wx.Panel):
 	def __init__(self, parent, context):
@@ -63,8 +65,11 @@ class ListStreamsTab(wx.Panel):
 		self.context.tab_subtitles.create_entries()
 	
 	def run_ocr(self, event):
-		frames = video_ocr.perform_video_ocr(app_state.video.file, sample_rate=2)
-		ocr_subs = [dub_line.DubbedLine(frame.ts_second, -1, frame.text, index) for index, frame in enumerate(frames)]
+		frames = video_ocr.perform_video_ocr(app_state.video.file, sample_rate=1)
+		ocr_subs = []
+		for index, frame in enumerate(frames):
+			if sum(not char.isspace() for char in frame.text) > 6 and not nonsense(frame.text):
+				ocr_subs.append(dub_line.DubbedLine(frame.ts_second, -1, frame.text, index))
 		app_state.video.subs_adjusted = ocr_subs
 		self.context.tab_subtitles.create_entries()
 	

@@ -14,8 +14,13 @@ class ListStreamsTab(wx.Panel):
 		
 		self.context = context
 
-		self.rb_audio = wx.RadioBox(self, majorDimension=1)
-		self.rb_subs = wx.RadioBox(self, majorDimension=1)
+		self.scroll_panel = wx.ScrolledWindow(self, style=wx.VSCROLL)
+		self.scroll_sizer = wx.BoxSizer(wx.VERTICAL)
+		self.scroll_panel.SetSizer(self.scroll_sizer)
+		self.scroll_panel.SetScrollRate(0, 20)
+
+		self.rb_audio = wx.RadioBox(self.scroll_panel, majorDimension=1)
+		self.rb_subs = wx.RadioBox(self.scroll_panel, majorDimension=1)
 
 		btn_remove_vocals = wx.Button(self, label="Remove vocals")
 		btn_remove_vocals.Bind(wx.EVT_BUTTON, self.remove_vocals)
@@ -28,32 +33,40 @@ class ListStreamsTab(wx.Panel):
 		sizer = wx.BoxSizer(wx.VERTICAL)
 		sizer.Add(btn_remove_vocals, 0, wx.ALL | wx.CENTER, 5)
 		sizer.Add(btn_ocr, 0, wx.ALL | wx.CENTER, 5)
-		sizer.Add(wx.StaticText(self, label="Select an Audio Stream:"), 0, wx.ALL, 5)
-		sizer.Add(self.rb_audio, 0, wx.ALL | wx.EXPAND, 5)
-		sizer.Add(wx.StaticText(self, label="Select a Subtitle Stream:"), 0, wx.ALL, 5)
-		sizer.Add(self.rb_subs, 0, wx.ALL | wx.EXPAND, 5)
+		self.scroll_sizer.Add(wx.StaticText(self.scroll_panel, label="Select an Audio Stream:"), 0, wx.ALL, 5)
+		self.scroll_sizer.Add(self.rb_audio, 0, wx.ALL | wx.EXPAND, 5)
+		self.scroll_sizer.Add(wx.StaticText(self.scroll_panel, label="Select a Subtitle Stream:"), 0, wx.ALL, 5)
+		self.scroll_sizer.Add(self.rb_subs, 0, wx.ALL | wx.EXPAND, 5)
+		sizer.Add(self.scroll_panel, 1, wx.EXPAND | wx.ALL, border=10)
 		self.SetSizer(sizer)
+
+
 
 	def populate_streams(self, streams):
 		# This code is some of the worst code, i hate it so much, but WX DOESN'T LET ME RESET THE CHOICES LIKE WITH **EVERY** OTHER LIST COMPONENT
 		_rb_audio = self.rb_audio
-		self.rb_audio = wx.RadioBox(self,
+		self.rb_audio = wx.RadioBox(self.scroll_panel,
 			choices=[f"Stream #{stream['index']} ({stream.get('tags', {'language': 'unknown'}).get('language', 'unknown')})" for stream in streams["audio"]],
 			style=wx.RA_VERTICAL
 		)
 		self.rb_audio.Bind(wx.EVT_RADIOBOX, lambda a: self.on_audio_selection(None))
-		self.GetSizer().Replace(_rb_audio, self.rb_audio)
+		self.scroll_sizer.Replace(_rb_audio, self.rb_audio)
 		_rb_audio.Destroy()
 		
+		if not streams["subs"]:
+			self.SetSizerAndFit(self.GetSizer())
+			self.Layout()
+			return
+
 		_rb_subs_copy = self.rb_subs
-		self.rb_subs = wx.RadioBox(self,
+		self.rb_subs = wx.RadioBox(self.scroll_panel,
 			choices=[f"Stream #{stream['stream']} ({stream['name']})" for stream in streams["subs"]],
 			style=wx.RA_VERTICAL
 		)
 		self.rb_subs.Bind(wx.EVT_RADIOBOX, lambda a: self.on_subtitle_selection(None, streams))
-		self.GetSizer().Replace(_rb_subs_copy, self.rb_subs)
+		self.scroll_sizer.Replace(_rb_subs_copy, self.rb_subs)
 		_rb_subs_copy.Destroy()
-		self.SetSizerAndFit(self.GetSizer())
+		self.scroll_panel.SetSizerAndFit(self.scroll_sizer)
 		self.Layout()
 
 	def on_audio_selection(self, event):

@@ -44,15 +44,17 @@ class Video:
 		options = {
 			'outtmpl': 'output/%(id)s.%(ext)s',
 			'writesubtitles': True,
-			# 'writeautomaticsub': True,
-			'allsubtitles': True,
+			'writeautomaticsub': True,
 			"subtitleslangs": ["all"],
 			"progress_hooks": (progress_hook,)
 		}
 		try:
 			with YoutubeDL(options) as ydl:
 				info = ydl.extract_info(link)
-				return ydl.prepare_filename(info), list(info["subtitles"].values())[0][-1]["filepath"] if info["subtitles"] else None, info["subtitles"]
+				output = ydl.prepare_filename(info)
+				subs = info["automatic_captions"] | info["subtitles"]
+				subs = {k:v for k, v in subs.items() if v[-1].get("filepath", None)}
+				return output, list(subs.values())[0][-1]["filepath"] if subs else None, subs
 		except Exception as e:
 			progress_hook({"status": "error", "error": e})
 			raise e

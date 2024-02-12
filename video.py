@@ -152,7 +152,7 @@ class Video:
 
 		return empty_audio
 
-	def run_dubbing(self, progress_hook=None):
+	def run_dubbing(self, progress_hook=None, match_rate=True):
 		total_errors = 0
 		operation_start_time = time.process_time()
 		empty_audio = AudioSegment.silent(self.duration * 1000, frame_rate=22050)
@@ -165,7 +165,7 @@ class Video:
 			status = f"{i}/{len(self.subs_adjusted)}"
 			progress_hook(i, f"{status}: {sub.text}")
 			try:
-				line = sub.dub_line_file(False)
+				line = sub.dub_line_file(match_rate=match_rate, match_volume=False)
 				empty_audio = empty_audio.overlay(line, sub.start*1000)
 			except Exception as e:
 				print(e)

@@ -93,13 +93,13 @@ In the "Streams" tab, you can run vocal isolation which will attempt to remove t
 Once you've configured things how you like, you can press the big, JUICY run dubbing button. This can take a while to run. Once completed, you should have something like "MyVideo-dubbed.mkv" in the `output` directory. This is your finished video!
 
 ## Things to do
-- A ===better filtering system for language detection. Maybe inclusive and exclusive or confidence threshhold
+- A better filtering system for language detection. Maybe inclusive and exclusive or confidence threshhold
 - Find some less copyrighted multi-lingual / non-english content to display demos publicly
 - ~~de-anglicanization it so the user can select their target language instead of just English~~
 - FIX PYDUB'S STUPID ARRAY DISTORTION so we don't have to perform 5 IO operations per dub!!!
 - ~~run a vocal isolation / remover on the source audio to remove / mitigate the original speakers?~~
 - ~~A proper setup guide for all platforms~~
-- remove or fix the broken espeak implementation to be cross-platform
+- ~~remove or fix the broken espeak implementation to be cross-platform~~
 - ~~Uninitialized, singletons for heavy models upon startup (e.g. only intialize pyannote/speechbrain pipelines when needed)~~
 - Abstraction for singletons of Coqui voices using the same model to reduce memory footprint
 - ~~GUI tab to list and select audio / subtitle streams w/ FFMPEG~~
@@ -108,13 +108,12 @@ Once you've configured things how you like, you can press the big, JUICY run dub
 - ~~Single speaker or multi speaker control switch~~
 - ~~Download YouTube video with Closed Captions~~
 - ~~GUI to select start and end time for dubbing~~
-- Throw uHey, You're my furp a Flask server on my website so you can try it with minimal features.
-- Use OCR to generate subtitles for videos that don't have sub streams
+- Throw up a Flask server on my website so you can try it with minimal features.
+- ~~Use OCR to generate subtitles for videos that don't have sub streams~~
 - Use OCR for non-text based subtitles
-- Make a cool logo?
+- ~~Make a cool logo?~~
 - Learn how to package python programs as binaries to make releases
 - ~~Remove the copyrighted content from this repo (sorry not sorry TV Tokyo)~~
-- Save and import config files for later
 - ~~Support for all subtitle formats~~
 - Maybe slap in an ASR library for videos without subtitles?
 - Maybe support for magnet URLs or the arrLib to pirate media (who knows???)
@@ -137,7 +136,7 @@ Once you've configured things how you like, you can press the big, JUICY run dub
 - Add Support for PiperTTS
 
 ### Cloning
-- Create a cloning mode to select subtitles and export them to a dataset or wav compilation for Coqui XTTS
+- ~~Create a cloning mode to select subtitles and export them to a dataset or wav compilation for Coqui XTTS~~
 - Use diaries and subtitles to isolate and build training datasets
 - Build a tool to streamline the manual creation of datasets
 

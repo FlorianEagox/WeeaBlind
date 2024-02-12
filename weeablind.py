@@ -32,8 +32,8 @@ class GUI(wx.Panel):
 		self.txt_start.Bind(wx.EVT_TEXT_ENTER, self.change_crop_time)
 		self.txt_end.Bind(wx.EVT_TEXT_ENTER, self.change_crop_time)
 
-		self.chk_match_volume = wx.CheckBox(self, label="Match Speaker Volume")
-		self.chk_match_volume.SetValue(True)
+		self.chk_match_rate = wx.CheckBox(self, label="Match Speaker Rate")
+		self.chk_match_rate.SetValue(True)
 
 		self.lb_voices = wx.ListBox(self, choices=[speaker.name for speaker in app_state.speakers])
 		self.lb_voices.Bind(wx.EVT_LISTBOX, self.on_voice_change)
@@ -59,7 +59,7 @@ class GUI(wx.Panel):
 		sizer.Add(self.txt_start, pos=(4, 1), flag= wx.TOP | wx.RIGHT, border=5)
 		sizer.Add(lbl_end_time, pos=(5, 0), flag=wx.LEFT | wx.TOP, border=5)
 		sizer.Add(self.txt_end, pos=(5, 1), flag= wx.TOP | wx.RIGHT, border=5)
-		sizer.Add(self.chk_match_volume, pos=(6, 0), span=(1, 2), flag=wx.LEFT | wx.TOP, border=5)
+		sizer.Add(self.chk_match_rate, pos=(6, 0), span=(1, 2), flag=wx.LEFT | wx.TOP, border=5)
 		sizer.Add(self.lb_voices, pos=(7, 0), span=(1, 1), flag=wx.EXPAND | wx.LEFT | wx.TOP, border=5)
 		sizer.Add(tab_control, pos=(7, 1), span=(1, 3), flag=wx.EXPAND | wx.ALL, border=5)
 		sizer.Add(btn_run_dub, pos=(9, 2), span=(1, 1), flag=wx.ALIGN_RIGHT | wx.RIGHT | wx.BOTTOM, border=5)
@@ -145,7 +145,7 @@ class GUI(wx.Panel):
 				return wx.CallAfter(progress_dialog.Destroy)
 			wx.CallAfter(progress_dialog.Update, i, text)
 
-		dub_thread = threading.Thread(target=app_state.video.run_dubbing, args=(update_progress,))
+		dub_thread = threading.Thread(target=app_state.video.run_dubbing, args=(update_progress,self.chk_match_rate.GetValue()))
 		dub_thread.start()
 
 if __name__ == '__main__':

@@ -24,11 +24,15 @@ class DubbedLine:
 	language: str = ""
 
 	# This is highly inefficient as it writes and reads the same file many times
-	def dub_line_file(self, match_volume=True, output=False):
+	def dub_line_file(self, match_rate=True, match_volume=True, output=False):
 		output_path = utils.get_output_path(str(self.index), '.wav', path='files')
 		tts_audio = app_state.speakers[self.voice].speak(self.text, output_path)
-		rate_adjusted = self.match_rate(tts_audio, self.end-self.start)
-		segment = AudioSegment.from_wav(rate_adjusted)
+		print(match_rate)
+		if match_rate and not self.end == -1:
+			rate_adjusted = self.match_rate(tts_audio, self.end-self.start)
+			segment = AudioSegment.from_wav(rate_adjusted)
+		else:
+			segment = AudioSegment.from_wav(tts_audio)
 		if match_volume:
 			segment = self.match_volume(app_state.video.get_snippet(self.start, self.end), segment)
 		if output:

@@ -67,7 +67,8 @@ class ESpeakVoice(Voice):
 		self.voice_option = self.voice.voice
 
 	def speak(self, text, file_name):
-		self.voice.say(text, export_path=file_name)
+		self.voice.say(text, wait4prev=True, export_path=file_name)
+		time.sleep(0.1) # We need to replace this with something that actually checks if the command output is finished tbh
 		return file_name
 
 	def set_voice_params(self, voice=None, pitch=None):

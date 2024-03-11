@@ -46,6 +46,7 @@ class Video:
 			'writesubtitles': True,
 			'writeautomaticsub': True,
 			"subtitleslangs": ["all"],
+			# "subtitleslangs": ["en"],
 			"progress_hooks": (progress_hook,)
 		}
 		try:

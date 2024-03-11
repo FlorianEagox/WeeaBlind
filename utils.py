@@ -3,14 +3,22 @@ import app_state
 import numpy as np
 from pydub.playback import play
 from pydub import AudioSegment
-from torch.cuda import is_available
+import feature_support
+import sys
 
 APP_NAME = "WeeaBlind"
 test_video_name = "./output/download.webm"
 
 test_start_time = 94
 test_end_time =  1324
-gpu_detected = is_available()
+gpu_detected = feature_support.gpu_supported
+
+root = __file__
+if getattr(sys, 'frozen', False):
+	application_path = os.path.dirname(sys.executable)
+	print("NEW PATH", application_path)
+	os.chdir(application_path)
+	root = sys.executable
 
 def create_output_dir():
 	path = './output/files'
@@ -20,9 +28,10 @@ def create_output_dir():
 def get_output_path(input, suffix, prefix='', path=''):
 	filename = os.path.basename(input)
 	filename_without_extension = os.path.splitext(filename)[0]
-	return os.path.join(os.path.dirname(os.path.abspath(__file__)), 'output', path, f"{prefix}{filename_without_extension}{suffix}")
+	return os.path.join(os.path.dirname(os.path.abspath(root)), 'output', path, f"{prefix}{filename_without_extension}{suffix}")
 
 default_sample_path = get_output_path("sample", ".wav")
+print(default_sample_path)
 
 def timecode_to_seconds(timecode):
 	parts = list(map(float, timecode.split(':')))

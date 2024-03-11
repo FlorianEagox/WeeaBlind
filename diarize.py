@@ -5,10 +5,11 @@
 import app_state
 import utils
 from Voice import Voice
-import torchaudio.transforms as T
-import torchaudio
 import random
 import feature_support
+if feature_support.torch_supported:
+	import torchaudio.transforms as T
+	import torchaudio
 if feature_support.diarization_supported:
 	from pyannote.audio import Pipeline
 

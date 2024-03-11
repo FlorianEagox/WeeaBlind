@@ -4,10 +4,10 @@ import os
 import threading
 import feature_support
 import pyttsx3
-import espeakng
 import numpy as np
-from torch.cuda import is_available
 import time
+if feature_support.espeak_supported:
+	import espeakng
 if feature_support.coqui_supported:
 	from TTS.api import TTS
 	from TTS.utils import manage
@@ -82,7 +82,7 @@ class ESpeakVoice(Voice):
 class CoquiVoice(Voice):
 	def __init__(self, init_args=None, name="Coqui Voice"):
 		super().__init__(Voice.VoiceType.COQUI, init_args, name)
-		self.voice = TTS().to('cuda' if is_available() else 'cpu')
+		self.voice = TTS().to('cuda' if feature_support.gpu_supported else 'cpu')
 		self.langs = ["All Languages"] + list({lang.split("/")[1] for lang in self.voice.models})
 		self.langs.sort()
 		self.selected_lang = 'en'

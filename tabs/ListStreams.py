@@ -6,7 +6,8 @@ import re
 import feature_support
 if feature_support.ocr_supported:
 	import video_ocr
-from nostril import nonsense
+if feature_support.nostril_supported:
+	from nostril import nonsense
 
 class ListStreamsTab(wx.Panel):
 	def __init__(self, parent, context):

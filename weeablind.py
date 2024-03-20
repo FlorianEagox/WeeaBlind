@@ -7,6 +7,7 @@ import threading
 import utils
 from video import Video
 import app_state
+import feature_support
 
 class GUI(wx.Panel):
 	def __init__(self, parent):
@@ -67,6 +68,21 @@ class GUI(wx.Panel):
 		self.tab_voice_config.update_voice_fields(None)
 
 		self.SetSizerAndFit(sizer)
+		wx.CallAfter(self.check_ffmpeg)
+
+	def check_ffmpeg(self):
+		if not feature_support.ffmpeg_supported:
+			msg_has_ffmpeg = wx.MessageDialog(self, "FFmpeg is not detected on your system, Wouldd you like to automatically install it?", "Install FFmpeg?", style=wx.YES_NO | wx.ICON_QUESTION)
+			if msg_has_ffmpeg.ShowModal() == wx.ID_YES:
+				msg_loading = wx.ProgressDialog("Installing FFmpeg...", "Installing FFmpeg", parent=self, style=wx.PD_AUTO_HIDE | wx.PD_SMOOTH)
+				# msg_loading.Update(1)
+				try:
+					feature_support.install_ffmpeg()
+					msg_loading.Destroy()
+				except Exception as e:
+					print(e)
+					wx.MessageBox(f"Installing FFmpeg failed, please install it manually, and add it to your system envionrment path. {e}", "FFmpeg Install failed", wx.ICON_ERROR, self)
+
 
 	def open_file(self, evenet):
 		dlg = wx.FileDialog(

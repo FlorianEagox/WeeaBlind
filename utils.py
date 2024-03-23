@@ -3,7 +3,6 @@ import app_state
 import numpy as np
 from pydub.playback import play
 from pydub import AudioSegment
-import feature_support
 import sys
 
 APP_NAME = "WeeaBlind"
@@ -11,7 +10,6 @@ test_video_name = "./output/download.webm"
 
 test_start_time = 94
 test_end_time =  1324
-gpu_detected = feature_support.gpu_supported
 
 root = __file__
 if getattr(sys, 'frozen', False):

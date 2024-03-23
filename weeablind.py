@@ -15,8 +15,8 @@ class GUI(wx.Panel):
 
 		# Labels
 		lbl_title = wx.StaticText(self, label="WeeaBlind")
-		lbl_GPU = wx.StaticText(self, label=f"GPU Detected? {utils.gpu_detected}")
-		lbl_GPU.SetForegroundColour((0, 255, 0) if utils.gpu_detected else (255, 0, 0))
+		lbl_GPU = wx.StaticText(self, label=f"GPU Detected? {feature_support.gpu_supported}")
+		lbl_GPU.SetForegroundColour((0, 255, 0) if feature_support.gpu_supported else (255, 0, 0))
 		lbl_main_file = wx.StaticText(self, label="Choose a video file or link to a YouTube video:")
 		lbl_start_time = wx.StaticText(self, label="Start Time:")
 		lbl_end_time = wx.StaticText(self, label="End Time:")
@@ -78,10 +78,10 @@ class GUI(wx.Panel):
 				# msg_loading.Update(1)
 				try:
 					feature_support.install_ffmpeg()
-					msg_loading.Destroy()
 				except Exception as e:
 					print(e)
-					wx.MessageBox(f"Installing FFmpeg failed, please install it manually, and add it to your system envionrment path. {e}", "FFmpeg Install failed", wx.ICON_ERROR, self)
+					wx.MessageBox(f"Installing FFmpeg failed, please install it manually, and add it to your system envionrment path. {e.with_traceback()}", "FFmpeg Install failed", wx.ICON_ERROR, self)
+				msg_loading.Destroy()
 
 
 	def open_file(self, evenet):

@@ -1,8 +1,9 @@
 import os
-
+import sys
 import importlib.util
 import static_ffmpeg
 import subprocess
+from utils import get_output_path
 
 def is_module_available(module_name):
 	try:
@@ -12,7 +13,12 @@ def is_module_available(module_name):
 		return False
 
 def check_ffmpeg():
-	try:
+	# First we'll check if FFmpeg was installed automatically by weeablind, a "crumb" will be left behind if so
+	ffmpeg_path = get_output_path('', '', path='ffmpeg')
+	if os.path.exists(os.path.join(ffmpeg_path, 'installed.crumb')):
+		# The dir with the ffmpeg binary will be named based dont he platform, and we need to know wthis to locate it
+		os.environ["PATH"] = os.pathsep.join([os.path.join(ffmpeg_path, sys.platform), os.environ["PATH"]])
+	try: # run an ffmpeg command to see if it works
 		subprocess.run(['ffmpeg', '-version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
 		return True
 	except:
@@ -36,5 +42,5 @@ if torch_supported:
 # language_detection_supported = coqui_supported = False
 
 def install_ffmpeg():
-	# static_ffmpeg._add_paths.get_or_fetch_platform_executables_else_raise(True)
-	return static_ffmpeg.add_paths(True)
+	static_ffmpeg.add_paths(False, get_output_path('', '', path='ffmpeg'))
+	check_ffmpeg()

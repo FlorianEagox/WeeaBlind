@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/weeablind.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
             "subProcess": true
         }
     ]

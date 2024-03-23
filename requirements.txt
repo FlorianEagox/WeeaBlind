@@ -1,19 +1,21 @@
 # Absolutely required
 ffmpeg-python
+git+https://github.com/FlorianEagox/static_ffmpeg # Script to install FFmpeg
 srt
 pydub
 pyAudio # <--- Needed on Windows, breaks on Linux smh
 pyttsx3 # <-- System TTS engine
+static-ffmpeg
 -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-22.04
 wxpython
 audiotsm # <-- Audio timestretching
 yt-dlp # <-- Downloading YT vids
-librosa>=0.10.0
 # Optional
-espeakng
-tts==0.22.0 # <-- Coqui TTS engine
-pyannote.audio
+# librosa>=0.10.0
+# espeakng
 # spleeter # <-- Vocal / Background isolation
-speechbrain # <-- Audio Language Identification
-git+https://github.com/casics/nostril.git # <--- GOBBLEDYGOOK OBLITERATOR
--f https://github.com/simonflueckiger/tesserocr-windows_build/releases/download/tesserocr-v2.6.0-tesseract-5.3.1/tesserocr-2.6.0-cp310-cp310-win_amd64.whl
+# tts>=0.22.0 # <-- Coqui TTS engine
+# pyannote.audio
+# speechbrain # <-- Audio Language Identification
+# git+https://github.com/casics/nostril.git # <--- GOBBLEDYGOOK OBLITERATOR
+# -f https://github.com/simonflueckiger/tesserocr-windows_build/releases/download/tesserocr-v2.6.0-tesseract-5.3.1/tesserocr-2.6.0-cp310-cp310-win_amd64.whl

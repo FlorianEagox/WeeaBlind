@@ -2,7 +2,7 @@
 # I wanted to abstract it to it's own file, just like vocal isolation & diarization
 import feature_support
 if feature_support.language_detection_supported:
-	from speechbrain.pretrained import EncoderClassifier
+	from speechbrain.inference.classifiers import EncoderClassifier
 
 language_identifier_model = None
 

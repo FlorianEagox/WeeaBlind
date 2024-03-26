@@ -72,10 +72,10 @@ class GUI(wx.Panel):
 
 	def check_ffmpeg(self):
 		if not feature_support.ffmpeg_supported:
-			msg_has_ffmpeg = wx.MessageDialog(self, "FFmpeg is not detected on your system, Wouldd you like to automatically install it?", "Install FFmpeg?", style=wx.YES_NO | wx.ICON_QUESTION)
+			msg_has_ffmpeg = wx.MessageDialog(self, "FFmpeg is not detected on your system, Would you like to automatically install it?", "Install FFmpeg?", style=wx.YES_NO | wx.ICON_QUESTION)
 			if msg_has_ffmpeg.ShowModal() == wx.ID_YES:
 				msg_loading = wx.ProgressDialog("Installing FFmpeg...", "Installing FFmpeg", parent=self, style=wx.PD_AUTO_HIDE | wx.PD_SMOOTH)
-				# msg_loading.Update(1)
+				msg_loading.Update(1)
 				try:
 					feature_support.install_ffmpeg()
 				except Exception as e:

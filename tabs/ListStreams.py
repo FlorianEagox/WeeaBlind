@@ -4,6 +4,7 @@ import vocal_isolation
 import dub_line
 import re
 import feature_support
+
 if feature_support.ocr_supported:
 	import video_ocr
 if feature_support.nostril_supported:
@@ -19,7 +20,7 @@ class ListStreamsTab(wx.Panel):
 		self.scroll_sizer = wx.BoxSizer(wx.VERTICAL)
 		self.scroll_panel.SetSizer(self.scroll_sizer)
 		self.scroll_panel.SetScrollRate(0, 20)
-
+		
 		self.rb_audio = wx.RadioBox(self.scroll_panel, majorDimension=1)
 		self.rb_subs = wx.RadioBox(self.scroll_panel, majorDimension=1)
 
@@ -30,6 +31,10 @@ class ListStreamsTab(wx.Panel):
 		btn_ocr = wx.Button(self, label="Extract subs with OCR")
 		btn_ocr.Bind(wx.EVT_BUTTON, self.run_ocr)
 		if not feature_support.ocr_supported: btn_ocr.Disable()
+		lbl_import_external = wx.StaticText(self.scroll_panel, label="Import external Subtitles file")
+		self.file_import_external = wx.FilePickerCtrl(self.scroll_panel, message="Import External subtitles file", wildcard="Subtitle Files |*.srt;*.vtt;*.ass")
+		self.file_import_external.Bind(wx.EVT_FILEPICKER_CHANGED, self.import_subs)
+
 		# Create a sizer for layout
 		sizer = wx.BoxSizer(wx.VERTICAL)
 		sizer.Add(btn_remove_vocals, 0, wx.ALL | wx.CENTER, 5)
@@ -38,6 +43,8 @@ class ListStreamsTab(wx.Panel):
 		self.scroll_sizer.Add(self.rb_audio, 0, wx.ALL | wx.EXPAND, 5)
 		self.scroll_sizer.Add(wx.StaticText(self.scroll_panel, label="Select a Subtitle Stream:"), 0, wx.ALL, 5)
 		self.scroll_sizer.Add(self.rb_subs, 0, wx.ALL | wx.EXPAND, 5)
+		self.scroll_sizer.Add(lbl_import_external, 0, wx.ALL | wx.CENTER, 5)
+		self.scroll_sizer.Add(self.file_import_external, 0, wx.ALL | wx.CENTER, 5)
 		sizer.Add(self.scroll_panel, 1, wx.EXPAND | wx.ALL, border=10)
 		self.SetSizer(sizer)
 
@@ -89,3 +96,7 @@ class ListStreamsTab(wx.Panel):
 	
 	def remove_vocals(self, event):
 		vocal_isolation.seperate_file(app_state.video)
+
+	def import_subs(self, event):
+		app_state.video.change_subs(external_path=self.file_import_external.GetPath())
+		self.context.tab_subtitles.create_entries()

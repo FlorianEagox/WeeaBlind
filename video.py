@@ -201,7 +201,12 @@ class Video:
 		ffmpeg.run(output, overwrite_output=True)
 
 	# Change the subs to either a file or a different stream from the video file
-	def change_subs(self, stream_index=-1):
+	def change_subs(self, stream_index=-1, external_path=""):
+		if external_path:
+			convert_srt_path = utils.get_output_path(external_path, '.srt')
+			ffmpeg.input(external_path).output(convert_srt_path).run(overwrite_output=True)
+			self.subs = self.subs_adjusted = load_subs(convert_srt_path)
+			return
 		if self.downloaded:
 			sub_path = list(self.yt_sub_streams.values())[stream_index][-1]['filepath']
 			self.subs = self.subs_adjusted = load_subs(utils.get_output_path(sub_path, '.srt'), sub_path)

@@ -15,6 +15,7 @@ espeakng
 spleeter # <-- Vocal / Background isolation
 tts>=0.22.0 # <-- Coqui TTS engine
 pyannote.audio
-git+https://github.com/speechbrain/speechbrain.git@develop # speechbrain # <-- Audio Language Identification
+# git+https://github.com/speechbrain/speechbrain.git # speechbrain # <-- Audio Language Identification
 git+https://github.com/casics/nostril.git # <--- GOBBLEDYGOOK OBLITERATOR
 -f https://github.com/simonflueckiger/tesserocr-windows_build/releases/download/tesserocr-v2.6.0-tesseract-5.3.1/tesserocr-2.6.0-cp310-cp310-win_amd64.whl
+protobuf==3.20 # Coqui breaks without this version specifically 

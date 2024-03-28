@@ -8,12 +8,13 @@ import utils
 from video import Video
 import app_state
 import feature_support
+from Voice import Voice
 
 class GUI(wx.Panel):
 	def __init__(self, parent):
 		super().__init__(parent)
 
-		# Labels
+		
 		lbl_title = wx.StaticText(self, label="WeeaBlind")
 		lbl_GPU = wx.StaticText(self, label=f"GPU Detected? {feature_support.gpu_supported}")
 		lbl_GPU.SetForegroundColour((0, 255, 0) if feature_support.gpu_supported else (255, 0, 0))
@@ -21,7 +22,7 @@ class GUI(wx.Panel):
 		lbl_start_time = wx.StaticText(self, label="Start Time:")
 		lbl_end_time = wx.StaticText(self, label="End Time:")
 
-		# Controls
+
 		btn_choose_file = wx.Button(self, label="Choose File")
 		btn_choose_file.Bind(wx.EVT_BUTTON, self.open_file)
 
@@ -39,6 +40,9 @@ class GUI(wx.Panel):
 		self.lb_voices = wx.ListBox(self, choices=[speaker.name for speaker in app_state.speakers])
 		self.lb_voices.Bind(wx.EVT_LISTBOX, self.on_voice_change)
 		self.lb_voices.Select(0)
+
+		btn_new_speaker = wx.Button(self, label="New Speaker")
+		btn_new_speaker.Bind(wx.EVT_BUTTON, self.add_speaker)
 
 		tab_control = wx.Notebook(self)
 		self.tab_voice_config = ConfigureVoiceTab(tab_control, self)
@@ -62,6 +66,7 @@ class GUI(wx.Panel):
 		sizer.Add(self.txt_end, pos=(5, 1), flag= wx.TOP | wx.RIGHT, border=5)
 		sizer.Add(self.chk_match_rate, pos=(6, 0), span=(1, 2), flag=wx.LEFT | wx.TOP, border=5)
 		sizer.Add(self.lb_voices, pos=(7, 0), span=(1, 1), flag=wx.EXPAND | wx.LEFT | wx.TOP, border=5)
+		sizer.Add(btn_new_speaker, pos=(8, 0), span=(1, 1), flag=wx.LEFT, border=5)
 		sizer.Add(tab_control, pos=(7, 1), span=(1, 3), flag=wx.EXPAND | wx.ALL, border=5)
 		sizer.Add(btn_run_dub, pos=(9, 2), span=(1, 1), flag=wx.ALIGN_RIGHT | wx.RIGHT | wx.BOTTOM, border=5)
 		sizer.AddGrowableCol(1)
@@ -147,6 +152,12 @@ class GUI(wx.Panel):
 		app_state.sample_speaker = app_state.current_speaker
 		self.tab_voice_config.update_voice_fields(event)
 
+	def add_speaker(self, event):
+		num_voice = self.lb_voices.GetCount()-1
+		app_state.speakers.append(Voice(Voice.VoiceType.SYSTEM, name=f"Voice {num_voice}"))
+		self.update_voices_list()
+		self.lb_voices.Select(num_voice+1)
+
 	def run_dub(self, event):
 		progress_dialog = wx.ProgressDialog(
 			"Dubbing Progress",
@@ -167,7 +178,7 @@ class GUI(wx.Panel):
 if __name__ == '__main__':
 	utils.create_output_dir()
 	app = wx.App(False)
-	frame = wx.Frame(None, wx.ID_ANY, utils.APP_NAME, size=(800, 900))
+	frame = wx.Frame(None, wx.ID_ANY, utils.APP_NAME, size=(850, 900))
 	frame.Center()
 	gui = GUI(frame)
 	frame.Show()

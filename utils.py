@@ -11,8 +11,10 @@ test_video_name = "./output/download.webm"
 test_start_time = 94
 test_end_time =  1324
 
+is_deployed = getattr(sys, 'frozen', False)
+
 root = __file__
-if getattr(sys, 'frozen', False):
+if is_deployed:
 	application_path = os.path.dirname(sys.executable)
 	print("NEW PATH", application_path)
 	os.chdir(application_path)
@@ -47,8 +49,8 @@ def seconds_to_timecode(seconds):
 	timecode = ""
 	if hours:
 		timecode += f"{hours}:"
-	if minutes:
-		timecode += f"{minutes}:" 
+	# if minutes:
+	timecode += str(minutes).zfill(2) + ':'
 	timecode = f"{timecode}{seconds:05.2f}"
 	return timecode
 

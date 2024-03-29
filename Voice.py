@@ -14,9 +14,9 @@ if feature_support.coqui_supported:
 
 class Voice(abc.ABC):
 	class VoiceType(Enum):
-		ESPEAK = "ESpeak"
-		COQUI = "Coqui TTS"
-		SYSTEM = "System Voices"
+		ESPEAK = ("ESpeak", feature_support.espeak_supported)
+		COQUI = ("Coqui TTS", feature_support.coqui_supported)
+		SYSTEM = ("System Voices", True)
 
 	def __new__(cls, voice_type, init_args=[], name="Unnamed"):
 		if cls is Voice:

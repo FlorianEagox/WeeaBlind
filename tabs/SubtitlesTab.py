@@ -34,7 +34,7 @@ class SubtitleEntry(wx.Panel):
 		btn_sample.Bind(wx.EVT_BUTTON, self.on_sample_button_click)
 		entry_sizer.Add(btn_sample, 0, wx.ALIGN_LEFT | wx.ALL, border=5)
 
-		self.chk_mark_export = wx.CheckBox(self, label="Mark For Cloning")
+		self.chk_mark_export = wx.CheckBox(self, label="Select Subtitle")
 		entry_sizer.Add(self.chk_mark_export, 0, wx.ALIGN_LEFT)
 
 		self.SetSizerAndFit(entry_sizer)
@@ -59,6 +59,9 @@ class SubtitlesTab(wx.Panel):
 		btn_language_filter = wx.Button(tb_controls, label="Filter Language")
 		btn_language_filter.Bind(wx.EVT_BUTTON, self.remove_langs)
 		
+		btn_assign_to_voice = wx.Button(tb_controls, label="Assign Selected Voice")
+		btn_assign_to_voice.Bind(wx.EVT_BUTTON, self.assign_voice)
+
 		btn_export_clone = wx.Button(tb_controls, label="Export Clone")
 		btn_export_clone.Bind(wx.EVT_BUTTON, self.export_clone)
 		
@@ -80,6 +83,7 @@ class SubtitlesTab(wx.Panel):
 		tb_controls.AddControl(self.lb_detected_langs)
 		tb_controls.AddControl(btn_language_filter)
 		tb_controls.AddControl(btn_diarize)
+		tb_controls.AddControl(btn_assign_to_voice)
 		tb_controls.AddControl(btn_export_clone)
 		tb_controls.Realize()
 
@@ -146,6 +150,10 @@ class SubtitlesTab(wx.Panel):
 		self.update_langs()
 		self.create_entries()
 	
+	def assign_voice(self, event):
+		[child.GetWindow().sub.update_voice(self.context.lb_voices.GetSelection()) for child in self.scroll_sizer.GetChildren() if child.GetWindow().chk_mark_export.IsChecked()],
+		self.create_entries()
+
 	def export_clone(self, event):
 		dlg_save = wx.FileDialog(self, "Save a new clone sample", "./output", "voice_sample.wav", "*.wav", wx.FD_SAVE)
 		if dlg_save.ShowModal() == wx.ID_OK:

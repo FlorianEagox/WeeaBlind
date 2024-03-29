@@ -1,5 +1,6 @@
 import wx
 import wx.adv
+import sys
 from tabs.ConfigureVoiceTab import ConfigureVoiceTab
 from tabs.SubtitlesTab import SubtitlesTab
 from tabs.ListStreams import ListStreamsTab
@@ -54,16 +55,15 @@ class GUI(wx.Panel):
 		btn_run_dub = wx.Button(self, label="Run Dubbing!")
 		btn_run_dub.Bind(wx.EVT_BUTTON, self.run_dub)
 		sizer = wx.GridBagSizer(vgap=5, hgap=5)
-
 		sizer.Add(lbl_title, pos=(0, 0), span=(1, 2), flag=wx.CENTER | wx.ALL, border=5)
 		sizer.Add(lbl_GPU, pos=(0, 3), span=(1, 1), flag=wx.CENTER | wx.ALL, border=5)
 		sizer.Add(lbl_main_file, pos=(2, 0), span=(1, 2), flag=wx.LEFT | wx.TOP, border=5)
 		sizer.Add(self.txt_main_file, pos=(3, 0), span=(1, 2), flag=wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, border=5)
 		sizer.Add(btn_choose_file, pos=(3, 2), span=(1, 1), flag=wx.ALIGN_RIGHT | wx.RIGHT | wx.BOTTOM, border=5)
-		sizer.Add(lbl_start_time, pos=(4, 0), flag=wx.LEFT | wx.TOP, border=5)
-		sizer.Add(self.txt_start, pos=(4, 1), flag= wx.TOP | wx.RIGHT, border=5)
-		sizer.Add(lbl_end_time, pos=(5, 0), flag=wx.LEFT | wx.TOP, border=5)
-		sizer.Add(self.txt_end, pos=(5, 1), flag= wx.TOP | wx.RIGHT, border=5)
+		sizer.Add(lbl_start_time, pos=(4, 0), flag=wx.LEFT | wx.TOP, border=3)
+		sizer.Add(self.txt_start, pos=(4, 1), flag= wx.TOP | wx.RIGHT, border=3)
+		sizer.Add(lbl_end_time, pos=(4, 2), flag=wx.LEFT | wx.TOP, border=3)
+		sizer.Add(self.txt_end, pos=(4, 3), flag= wx.TOP | wx.RIGHT, border=3)
 		sizer.Add(self.chk_match_rate, pos=(6, 0), span=(1, 2), flag=wx.LEFT | wx.TOP, border=5)
 		sizer.Add(self.lb_voices, pos=(7, 0), span=(1, 1), flag=wx.EXPAND | wx.LEFT | wx.TOP, border=5)
 		sizer.Add(btn_new_speaker, pos=(8, 0), span=(1, 1), flag=wx.LEFT, border=5)
@@ -84,6 +84,7 @@ class GUI(wx.Panel):
 				try:
 					feature_support.install_ffmpeg()
 				except Exception as e:
+					print("EEP")
 					print(e)
 					wx.MessageBox(f"Installing FFmpeg failed, please install it manually, and add it to your system envionrment path. {e.with_traceback()}", "FFmpeg Install failed", wx.ICON_ERROR, self)
 				msg_loading.Destroy()
@@ -153,10 +154,10 @@ class GUI(wx.Panel):
 		self.tab_voice_config.update_voice_fields(event)
 
 	def add_speaker(self, event):
-		num_voice = self.lb_voices.GetCount()-1
+		num_voice = self.lb_voices.GetCount()
 		app_state.speakers.append(Voice(Voice.VoiceType.SYSTEM, name=f"Voice {num_voice}"))
 		self.update_voices_list()
-		self.lb_voices.Select(num_voice+1)
+		self.lb_voices.Select(num_voice)
 
 	def run_dub(self, event):
 		progress_dialog = wx.ProgressDialog(
@@ -180,6 +181,8 @@ if __name__ == '__main__':
 	app = wx.App(False)
 	frame = wx.Frame(None, wx.ID_ANY, utils.APP_NAME, size=(850, 900))
 	frame.Center()
+	icon_path = "logo.png" if not utils.is_deployed else wx.IconLocation(sys.executable, 0)
+	frame.SetIcon(wx.Icon(icon_path))
 	gui = GUI(frame)
 	frame.Show()
 	app.MainLoop()

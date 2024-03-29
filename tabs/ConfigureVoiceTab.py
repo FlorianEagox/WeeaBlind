@@ -19,9 +19,9 @@ class ConfigureVoiceTab(wx.Panel):
 		self.add_control_with_label(grid_sizer, lbl_voice_name, self.txt_voice_name)
 
 		lbl_tts_engines = wx.StaticText(self, label="TTS Engine")
-		self.available_engines = [engine for engine in Voice.VoiceType if not (engine == Voice.VoiceType.COQUI and not feature_support.coqui_supported)]
+		self.available_engines = [engine for engine in Voice.VoiceType if engine.value[1]]
 
-		self.cb_tts_engines = wx.Choice(self, choices=[engine.value for engine in self.available_engines])
+		self.cb_tts_engines = wx.Choice(self, choices=[engine.value[0] for engine in self.available_engines])
 		self.cb_tts_engines.Bind(wx.EVT_CHOICE, self.change_tts_engine)
 		self.add_control_with_label(grid_sizer, lbl_tts_engines, self.cb_tts_engines)
 

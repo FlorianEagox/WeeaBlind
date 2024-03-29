@@ -9,3 +9,5 @@ pyttsx3 # <-- System TTS engine
 wxpython
 audiotsm # <-- Audio timestretching
 yt-dlp # <-- Downloading YT vids
+espeakng
+pyinstaller

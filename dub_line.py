@@ -23,6 +23,9 @@ class DubbedLine:
 	voice: int = 0
 	language: str = ""
 
+	def update_voice(self, voice):
+		self.voice = voice
+
 	# This is highly inefficient as it writes and reads the same file many times
 	def dub_line_file(self, match_rate=True, match_volume=True, output=False):
 		output_path = utils.get_output_path(str(self.index), '.wav', path='files')

@@ -39,7 +39,7 @@ class DubbedLine:
 			segment = self.match_volume(app_state.video.get_snippet(self.start, self.end), segment)
 		if output:
 			segment.export(output_path, format='wav')
-		return segment
+		return segment, output_path
 
 	# This should ideally be a much more efficient way to dub.
 	# All functions should pass around numpy arrays rather than reading and writting files. For some reason though, it gives distroted results

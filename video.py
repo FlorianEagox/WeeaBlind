@@ -7,6 +7,8 @@ from yt_dlp import YoutubeDL
 import utils
 from pydub import AudioSegment
 from dub_line import load_subs
+import random
+from dub_line import DubbedLine
 
 class Video:
 	def __init__(self, video_URL, loading_progress_hook=print):
@@ -16,6 +18,7 @@ class Video:
 		self.background_track = self.vocal_track = None
 		self.speech_diary = self.speech_diary_adjusted = None
 		self.load_video(video_URL, loading_progress_hook)
+		self.mixing_ratio = 1
 
 
 	# This is responsible for loading the app's audio and subtitles from a video file or YT link
@@ -173,7 +176,7 @@ class Video:
 				total_errors += 1
 		self.dub_track = empty_audio.export(utils.get_output_path(self.file, '-dubtrack.wav'), format="wav").name
 		progress_hook(i+1, "Mixing New Audio")
-		self.mix_av(mixing_ratio=1)
+		self.mix_av(mixing_ratio=self.mixing_ratio)
 		progress_hook(-1)
 		print(f"TOTAL TIME TAKEN: {time.process_time() - operation_start_time}")
 		# print(total_errors)
@@ -227,3 +230,19 @@ class Video:
 			empty_audio += AudioSegment.silent()
 			empty_audio += self.get_snippet(snippet.start, snippet.end)
 		empty_audio.export(path, "wav")
+
+	def sample_mixing(self) -> AudioSegment:
+		random_test_sub: DubbedLine = random.choice(self.subs_adjusted)
+		dubbed_audio, output_path = random_test_sub.dub_line_file()
+		self.get_snippet(random_test_sub.start, random_test_sub.end).export(utils.snippet_export_path, format="wav")
+		source = ffmpeg.input(utils.snippet_export_path)
+		overlayed_tts = ffmpeg.input(output_path)
+		mixed_audio = ffmpeg.filter([source, overlayed_tts], 'amix', duration='first', weights=f"1 {self.mixing_ratio}")
+		mixed_sample_path = utils.get_output_path("mixed_sample", ".wav")
+		output = (
+			ffmpeg.output(mixed_audio, mixed_sample_path)
+			.global_args('-loglevel', 'error')
+			.global_args('-shortest')
+		)
+		ffmpeg.run(output, overwrite_output=True)
+		return AudioSegment.from_file(mixed_sample_path)

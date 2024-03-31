@@ -4,6 +4,8 @@ import vocal_isolation
 import dub_line
 import re
 import feature_support
+from pydub import AudioSegment
+from pydub.playback import play
 
 if feature_support.ocr_supported:
 	import video_ocr
@@ -35,6 +37,13 @@ class ListStreamsTab(wx.Panel):
 		self.file_import_external = wx.FilePickerCtrl(self.scroll_panel, message="Import External subtitles file", wildcard="Subtitle Files |*.srt;*.vtt;*.ass")
 		self.file_import_external.Bind(wx.EVT_FILEPICKER_CHANGED, self.import_subs)
 
+		lbl_mixing_ratio = wx.StaticText(self, label="Volume Mixing Ratio")
+		self.slider_audio_ratio = wx.Slider(self, value=50)
+		self.slider_audio_ratio.Bind(wx.EVT_SLIDER, self.change_mix)
+		btn_sample_mix = wx.Button(self, label="Preview Mix")
+		btn_sample_mix.Bind(wx.EVT_BUTTON, self.sample_mix)
+		
+
 		# Create a sizer for layout
 		sizer = wx.BoxSizer(wx.VERTICAL)
 		sizer.Add(btn_remove_vocals, 0, wx.ALL | wx.CENTER, 5)
@@ -46,6 +55,9 @@ class ListStreamsTab(wx.Panel):
 		self.scroll_sizer.Add(lbl_import_external, 0, wx.ALL | wx.CENTER, 5)
 		self.scroll_sizer.Add(self.file_import_external, 0, wx.ALL | wx.CENTER, 5)
 		sizer.Add(self.scroll_panel, 1, wx.EXPAND | wx.ALL, border=10)
+		sizer.Add(lbl_mixing_ratio, 0, wx.CENTER, 5)
+		sizer.Add(self.slider_audio_ratio, 0, wx.CENTER, 5)
+		sizer.Add(btn_sample_mix, 0, wx.RIGHT, 1)
 		self.SetSizer(sizer)
 
 
@@ -100,3 +112,9 @@ class ListStreamsTab(wx.Panel):
 	def import_subs(self, event):
 		app_state.video.change_subs(external_path=self.file_import_external.GetPath())
 		self.context.tab_subtitles.create_entries()
+
+	def change_mix(self, event):
+		app_state.video.mixing_ratio = self.slider_audio_ratio.GetValue() / 100
+
+	def sample_mix(self, event):
+		play(app_state.video.sample_mixing())

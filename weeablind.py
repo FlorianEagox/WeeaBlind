@@ -4,6 +4,7 @@ import sys
 from tabs.ConfigureVoiceTab import ConfigureVoiceTab
 from tabs.SubtitlesTab import SubtitlesTab
 from tabs.ListStreams import ListStreamsTab
+from tabs.GreeterView import GreeterView
 import threading
 import utils
 from video import Video
@@ -46,6 +47,7 @@ class GUI(wx.Panel):
 		btn_new_speaker.Bind(wx.EVT_BUTTON, self.add_speaker)
 
 		tab_control = wx.Notebook(self)
+		tab_control.AddPage(GreeterView(tab_control, self), "Welcome!")
 		self.tab_voice_config = ConfigureVoiceTab(tab_control, self)
 		tab_control.AddPage(self.tab_voice_config, "Configure Voices")
 		self.tab_subtitles = SubtitlesTab(tab_control, self)

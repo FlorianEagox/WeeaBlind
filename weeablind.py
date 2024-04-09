@@ -54,8 +54,10 @@ class GUI(wx.Panel):
 		tab_control.AddPage(self.tab_subtitles, "Subtitles")
 		self.streams_tab = ListStreamsTab(tab_control, self)
 		tab_control.AddPage(self.streams_tab, "Video Streams")
+		
 		btn_run_dub = wx.Button(self, label="Run Dubbing!")
 		btn_run_dub.Bind(wx.EVT_BUTTON, self.run_dub)
+		
 		sizer = wx.GridBagSizer(vgap=5, hgap=5)
 		sizer.Add(lbl_title, pos=(0, 0), span=(1, 2), flag=wx.CENTER | wx.ALL, border=5)
 		sizer.Add(lbl_GPU, pos=(0, 3), span=(1, 1), flag=wx.CENTER | wx.ALL, border=5)
@@ -67,10 +69,10 @@ class GUI(wx.Panel):
 		sizer.Add(lbl_end_time, pos=(4, 2), flag=wx.LEFT | wx.TOP, border=3)
 		sizer.Add(self.txt_end, pos=(4, 3), flag= wx.TOP | wx.RIGHT, border=3)
 		sizer.Add(self.chk_match_rate, pos=(6, 0), span=(1, 2), flag=wx.LEFT | wx.TOP, border=5)
-		sizer.Add(self.lb_voices, pos=(7, 0), span=(1, 1), flag=wx.EXPAND | wx.LEFT | wx.TOP, border=5)
-		sizer.Add(btn_new_speaker, pos=(8, 0), span=(1, 1), flag=wx.LEFT, border=5)
-		sizer.Add(tab_control, pos=(7, 1), span=(1, 3), flag=wx.EXPAND | wx.ALL, border=5)
-		sizer.Add(btn_run_dub, pos=(9, 2), span=(1, 1), flag=wx.ALIGN_RIGHT | wx.RIGHT | wx.BOTTOM, border=5)
+		sizer.Add(self.lb_voices, pos=(7, 0), span=(2, 1), flag=wx.EXPAND | wx.LEFT | wx.TOP, border=5)
+		sizer.Add(btn_new_speaker, pos=(9, 0), span=(1, 1), flag=wx.LEFT, border=5)
+		sizer.Add(tab_control, pos=(7, 1), span=(2, 3), flag=wx.EXPAND | wx.ALL, border=5)
+		sizer.Add(btn_run_dub, pos=(10, 2), span=(1, 1), flag=wx.ALIGN_RIGHT | wx.RIGHT | wx.BOTTOM, border=5)
 		sizer.AddGrowableCol(1)
 		self.tab_voice_config.update_voice_fields(None)
 

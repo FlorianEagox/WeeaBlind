@@ -44,7 +44,7 @@ class SubtitleEntry(wx.Panel):
 		pass
 
 	def on_sample_button_click(self, event):
-		play(self.sub.dub_line_file(match_rate=self.context.chk_match_rate.GetValue()))
+		play(self.sub.dub_line_file(match_rate=self.context.chk_match_rate.GetValue())[0])
 
 class SubtitlesTab(wx.Panel):
 	def __init__(self, notebook, context):

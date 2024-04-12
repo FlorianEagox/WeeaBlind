@@ -11,23 +11,23 @@ import random
 from dub_line import DubbedLine
 
 class Video:
-	def __init__(self, video_URL, loading_progress_hook=print):
+	def __init__(self, video_URL, loading_progress_hook=print, lang=None):
 		self.start_time = self.end_time = 0
 		self.downloaded = False
 		self.subs = self.subs_adjusted = self.subs_removed = []
 		self.background_track = self.vocal_track = None
 		self.speech_diary = self.speech_diary_adjusted = None
-		self.load_video(video_URL, loading_progress_hook)
+		self.load_video(video_URL, loading_progress_hook, lang)
 		self.mixing_ratio = 1
 
 
 	# This is responsible for loading the app's audio and subtitles from a video file or YT link
-	def load_video(self, video_path, progress_hook=print):
+	def load_video(self, video_path, progress_hook=print, lang=None):
 		sub_path = ""
 		if video_path.startswith("http"):
 			self.downloaded = True
 			try:
-				video_path, sub_path, self.yt_sub_streams = self.download_video(video_path, progress_hook)
+				video_path, sub_path, self.yt_sub_streams = self.download_video(video_path, progress_hook, lang=lang)
 			except: return
 			progress_hook({"status":"complete"})
 		else:
@@ -43,15 +43,18 @@ class Video:
 		if self.subs:
 			self.update_time(0, self.duration)
 
-	def download_video(self, link, progress_hook=print):
+	def download_video(self, link, progress_hook=print, lang=None):
 		options = {
 			'outtmpl': 'output/%(id)s.%(ext)s',
 			'writesubtitles': True,
 			'writeautomaticsub': True,
-			"subtitleslangs": ["all"],
-			# "subtitleslangs": ["en"],
 			"progress_hooks": (progress_hook,)
 		}
+		if lang:
+			options["subtitleslangs"] = lang.split(',')
+		else:
+			options["subtitleslangs"] = "[all]"
+		print(options)
 		try:
 			with YoutubeDL(options) as ydl:
 				info = ydl.extract_info(link)
@@ -169,7 +172,7 @@ class Video:
 			status = f"{i}/{len(self.subs_adjusted)}"
 			progress_hook(i, f"{status}: {sub.text}")
 			try:
-				line = sub.dub_line_file(match_rate=match_rate, match_volume=False)
+				line = sub.dub_line_file(match_rate=match_rate, match_volume=False)[0]
 				empty_audio = empty_audio.overlay(line, sub.start*1000)
 			except Exception as e:
 				print(e)

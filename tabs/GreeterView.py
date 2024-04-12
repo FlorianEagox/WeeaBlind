@@ -10,7 +10,7 @@ class GreeterView(wx.Panel):
 		self.scroll_panel.SetSizer(vbox)
 		self.scroll_panel.SetScrollRate(0, 20)
   
-		title = wx.StaticText(self.scroll_panel, label="Welcome to Weeablind")
+		title = wx.StaticText(self.scroll_panel, label="Welcome to WeeaBlind")
 		title_font = wx.Font(18, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
 		title.SetFont(title_font)
 		vbox.Add(title, 0, wx.ALIGN_LEFT | wx.TOP | wx.LEFT, 20)

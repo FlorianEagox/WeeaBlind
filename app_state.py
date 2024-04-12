@@ -1,7 +1,9 @@
 from Voice import Voice
 import feature_support
 from video import Video
+import sys
 
+platform = sys.platform
 video: Video = None
 if feature_support.coqui_supported:
     speakers = [Voice(Voice.VoiceType.COQUI, name="Sample")]

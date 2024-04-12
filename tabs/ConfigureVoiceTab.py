@@ -38,6 +38,11 @@ class ConfigureVoiceTab(wx.Panel):
 		self.cb_model_options.Bind(wx.EVT_CHOICE, self.change_voice_params)
 		self.add_control_with_label(grid_sizer, lbl_model_options, self.cb_model_options)
 		
+		self.btn_patch_onecore = wx.Button(self, label="Unlock OneCore Voices (Requires Admin)")
+		self.btn_patch_onecore.Bind(wx.EVT_BUTTON, self.patch_onecore)
+		self.btn_patch_onecore.Hide()
+		grid_sizer.Add((0,0), 1, wx.ALL | wx.ALIGN_LEFT, 5)
+		grid_sizer.Add(self.btn_patch_onecore, 1, wx.ALL | wx.ALIGN_RIGHT, 5)
 
 		# This is for multispeaker coqui models. Should be hidden by default & shown when model is multispeaker
 		self.lbl_speaker_voices = wx.StaticText(self, label="Speaker Voices")
@@ -53,7 +58,6 @@ class ConfigureVoiceTab(wx.Panel):
 		self.file_speaker_wav = wx.FilePickerCtrl(self, message="Select a voice sample to clone", wildcard="*.wav")
 		self.file_speaker_wav.Bind(wx.EVT_FILEPICKER_CHANGED, self.change_voice_params)
 		self.add_control_with_label(grid_sizer, self.chk_speaker_wav, self.file_speaker_wav)
-
 
 
 		lbl_sample_text = wx.StaticText(self, label="Sample Text")
@@ -111,6 +115,8 @@ class ConfigureVoiceTab(wx.Panel):
 				else:
 					self.lbl_speaker_voices.Hide()
 					self.cb_speaker_voices.Hide()
+		elif app_state.sample_speaker.voice_type == Voice.VoiceType.SYSTEM and app_state.platform == 'win32':
+			self.btn_patch_onecore.Show()
 		else:
 			self.lbl_coqui_lang.Hide()
 			self.cb_coqui_lang.Hide()
@@ -118,6 +124,7 @@ class ConfigureVoiceTab(wx.Panel):
 			self.file_speaker_wav.Hide()
 			self.lbl_speaker_voices.Hide()
 			self.cb_speaker_voices.Hide()
+			self.btn_patch_onecore.Hide()
 		self.Layout()
 
 	# Populate the form with the current sample speaker's params
@@ -183,3 +190,14 @@ class ConfigureVoiceTab(wx.Panel):
 		else:
 			self.cb_model_options.Set([model for model in app_state.sample_speaker.list_voice_options() if f"/{self.cb_coqui_lang.GetStringSelection()}/" in model])
 			app_state.sample_speaker.selected_lang = self.cb_coqui_lang.GetStringSelection()
+
+	def patch_onecore(self, event):
+		msg_prompt_patch = wx.MessageDialog(self, 
+"""By default, PyTTSx3 only supports 2 system voices, however, you can add more in
+Settings > Time & Language > Speech
+To use these voices, you must patch the registry to make them accessible. This requires admin rights and will not impact any other aspect of your system.
+Would you like to patch the Windows registry to add these voices?""",
+"Add OneCore Voices?",
+style=wx.YES_NO)
+		if msg_prompt_patch.ShowModal() == wx.ID_YES:
+			feature_support.patch_onecore_voices()

@@ -31,6 +31,8 @@ class GUI(wx.Panel):
 		self.txt_main_file = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER, value=utils.test_video_name)
 		self.txt_main_file.Bind(wx.EVT_TEXT_ENTER, lambda event: self.load_video(self.txt_main_file.Value))
 
+		self.txt_dl_lang = wx.TextCtrl(self, value="en")
+
 		self.txt_start = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER, value=utils.seconds_to_timecode(0))
 		self.txt_end = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER, value=utils.seconds_to_timecode(0))
 		self.txt_start.Bind(wx.EVT_TEXT_ENTER, self.change_crop_time)
@@ -63,6 +65,7 @@ class GUI(wx.Panel):
 		sizer.Add(lbl_GPU, pos=(0, 3), span=(1, 1), flag=wx.CENTER | wx.ALL, border=5)
 		sizer.Add(lbl_main_file, pos=(2, 0), span=(1, 2), flag=wx.LEFT | wx.TOP, border=5)
 		sizer.Add(self.txt_main_file, pos=(3, 0), span=(1, 2), flag=wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, border=5)
+		sizer.Add(self.txt_dl_lang, pos=(3, 3), span=(1,1))
 		sizer.Add(btn_choose_file, pos=(3, 2), span=(1, 1), flag=wx.ALIGN_RIGHT | wx.RIGHT | wx.BOTTOM, border=5)
 		sizer.Add(lbl_start_time, pos=(4, 0), flag=wx.LEFT | wx.TOP, border=3)
 		sizer.Add(self.txt_start, pos=(4, 1), flag= wx.TOP | wx.RIGHT, border=3)
@@ -74,6 +77,7 @@ class GUI(wx.Panel):
 		sizer.Add(tab_control, pos=(7, 1), span=(2, 3), flag=wx.EXPAND | wx.ALL, border=5)
 		sizer.Add(btn_run_dub, pos=(10, 2), span=(1, 1), flag=wx.ALIGN_RIGHT | wx.RIGHT | wx.BOTTOM, border=5)
 		sizer.AddGrowableCol(1)
+		sizer.AddGrowableRow(7)
 		self.tab_voice_config.update_voice_fields(None)
 
 		self.SetSizerAndFit(sizer)
@@ -112,7 +116,7 @@ class GUI(wx.Panel):
 			self.tab_subtitles.create_entries()
 
 		def initialize_video(progress=True):
-			app_state.video = Video(video_path, update_progress if progress else print)
+			app_state.video = Video(video_path, update_progress if progress else print, lang=self.txt_dl_lang.Value)
 			wx.CallAfter(update_ui)
 			wx.CallAfter(self.streams_tab.populate_streams, app_state.video.list_streams())
 

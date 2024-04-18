@@ -1,6 +1,8 @@
 import wx
 import feature_support
 from utils import is_deployed
+import sys
+import os
 
 class GreeterView(wx.Panel):
 	def __init__(self, parent, context):
@@ -16,7 +18,7 @@ class GreeterView(wx.Panel):
 		txt_title.SetFont(title_font)
 		vbox.Add(txt_title, 0, wx.ALIGN_LEFT | wx.TOP | wx.LEFT, 20)
 
-		img = wx.Image("logo.png", wx.BITMAP_TYPE_ANY)
+		img = wx.Image("logo.png" if not is_deployed else os.path.join("_internal", "logo.png"), wx.BITMAP_TYPE_ANY)
 		img.Rescale(200, 200)
 		bmp = wx.StaticBitmap(self.scroll_panel, wx.ID_ANY, wx.Bitmap(img))
 		vbox.Add(bmp, 0, wx.ALIGN_LEFT | wx.BOTTOM | wx.LEFT, 20)

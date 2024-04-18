@@ -11,5 +11,4 @@ pretrained_models
 tmp
 dist
 build
-*.spec
 audio_cache

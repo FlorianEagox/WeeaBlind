@@ -16,7 +16,6 @@ is_deployed = getattr(sys, 'frozen', False)
 root = __file__
 if is_deployed:
 	application_path = os.path.dirname(sys.executable)
-	print("NEW PATH", application_path)
 	os.chdir(application_path)
 	root = sys.executable
 

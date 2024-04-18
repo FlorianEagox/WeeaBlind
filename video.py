@@ -51,6 +51,7 @@ class Video:
 			"progress_hooks": (progress_hook,)
 		}
 		if lang:
+			options["writeautomaticsub"] = False
 			options["subtitleslangs"] = lang.split(',')
 		else:
 			options["subtitleslangs"] = "[all]"

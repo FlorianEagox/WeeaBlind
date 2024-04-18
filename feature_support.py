@@ -34,7 +34,7 @@ ocr_supported = is_module_available("video_ocr")
 nostril_supported = is_module_available("nostril")
 language_detection_supported = is_module_available("speechbrain")
 vocal_isolation_supported = is_module_available("spleeter")
-downloads_supported = is_module_available("yt-dl")
+downloads_supported = is_module_available("yt_dlp")
 espeak_supported = is_module_available("espeakng") and (is_executable("espeak") or is_executable("espeakng"))
 coqui_supported = False # is_module_available("TTS") # and espeak_supported
 torch_supported = is_module_available("torch")
@@ -51,12 +51,10 @@ def install_ffmpeg():
 
 # Windows has some voices PyTTSx3 can't access for some reason unless you add them to a different part of the registry, so this will try to do that
 def patch_onecore_voices():
-	import os
 	import win32security
 	import win32api
 
 	old_path = r"SOFTWARE\Microsoft\Speech_OneCore\Voices\Tokens"
-	new_path = r"SOFTWARE\Microsoft\Speech\Voices\Tokens"
 
 	priv_flags = win32security.TOKEN_ADJUST_PRIVILEGES | win32security.TOKEN_QUERY
 	hToken = win32security.OpenProcessToken (win32api.GetCurrentProcess (), priv_flags)

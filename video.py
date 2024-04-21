@@ -54,14 +54,14 @@ class Video:
 			options["writeautomaticsub"] = False
 			options["subtitleslangs"] = lang.split(',')
 		else:
-			options["subtitleslangs"] = "[all]"
-		print(options)
+			options["subtitleslangs"] = ["all"]
 		try:
 			with YoutubeDL(options) as ydl:
 				info = ydl.extract_info(link)
 				output = ydl.prepare_filename(info)
 				subs = info["automatic_captions"] | info["subtitles"]
 				subs = {k:v for k, v in subs.items() if v[-1].get("filepath", None)}
+				print("Detected Subtitles\n", subs)
 				return output, list(subs.values())[0][-1]["filepath"] if subs else None, subs
 		except Exception as e:
 			progress_hook({"status": "error", "error": e})

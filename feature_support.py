@@ -14,7 +14,7 @@ def is_module_available(module_name):
 
 def is_executable(program):
 	try:
-		subprocess.run([program, "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+		subprocess.run(program, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, check=True)
 		return True
 	except Exception as e:
 		print(program, e)
@@ -26,7 +26,7 @@ def check_ffmpeg():
 	if os.path.exists(os.path.join(ffmpeg_path, 'installed.crumb')):
 		# The dir with the ffmpeg binary will be named based dont he platform, and we need to know wthis to locate it
 		os.environ["PATH"] = os.pathsep.join([os.path.join(ffmpeg_path, sys.platform), os.environ["PATH"]])
-	return is_executable("ffmpeg")
+	return is_executable(["ffmpeg", "-version"])
 
 ffmpeg_supported = check_ffmpeg() # "ffmpeg" in os.getenv('PATH').lower()
 diarization_supported = is_module_available("pyannote")
@@ -35,7 +35,7 @@ nostril_supported = is_module_available("nostril")
 language_detection_supported = is_module_available("speechbrain")
 vocal_isolation_supported = is_module_available("spleeter")
 downloads_supported = is_module_available("yt_dlp")
-espeak_supported = is_module_available("espeakng") and (is_executable("espeak") or is_executable("espeakng"))
+espeak_supported = is_module_available("espeakng") and (is_executable(["espeak", "--version"]) or is_executable(["espeak-ng", "--version"]))
 coqui_supported = False # is_module_available("TTS") # and espeak_supported
 torch_supported = is_module_available("torch")
 gpu_supported = False

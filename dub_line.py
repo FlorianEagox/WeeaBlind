@@ -110,6 +110,8 @@ def filter_junk(subs, minimum_duration=0.1, remove_repeats=True):
 	for sub in subs:
 		if (sub.end - sub.start) > minimum_duration:
 			if sub.text != previous:
+				if previous and sub.text.split("\n")[0] in previous:
+					sub.text = "".join(sub.text.split("\n")[-1:])
 				filtered.append(sub)
 		previous = sub.text
 	return filtered

@@ -170,6 +170,7 @@ class SystemVoice(Voice):
 
 	def set_voice_params(self, voice=None, pitch=None):
 		if voice:
+			print(voice, self.voice.getProperty('voices')[self.list_voice_options().index(voice)].id)
 			self.voice.setProperty('voice', self.voice.getProperty('voices')[self.list_voice_options().index(voice)].id)
 			self.voice_option = voice # self.voice.getProperty('voice')
 

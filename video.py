@@ -60,6 +60,7 @@ class Video:
 				info = ydl.extract_info(link)
 				output = ydl.prepare_filename(info)
 				subs = info["automatic_captions"] | info["subtitles"]
+				print("SUBS:", subs)
 				subs = {k:v for k, v in subs.items() if v[-1].get("filepath", None)}
 				print("Detected Subtitles\n", subs)
 				return output, list(subs.values())[0][-1]["filepath"] if subs else None, subs
@@ -107,21 +108,24 @@ class Video:
 		)
 		return output
 
-	def filter_multilingual_subtiles(self, progress_hook=print, exclusion="English"):
-		multi_lingual_subs = []
-		removed_subs = []
-		# Speechbrain is being a lil bitch about this path on Windows all of the sudden
-		snippet_path = "video_snippet.wav" # utils.get_output_path('video_snippet', '.wav')
+	def detect_subs_lang(self, progress_hook=print):
+		snippet_path = snippet_path = "video_snippet.wav" # utils.get_output_path('video_snippet', '.wav')
 		for i, sub in enumerate(self.subs_adjusted):
 			self.get_snippet(sub.start, sub.end).export(snippet_path, format="wav")
-			if sub.get_language(snippet_path) != exclusion:
+			sub.get_language(snippet_path)
+			progress_hook(i, f"{i}/{len(self.subs_adjusted)}: {sub.text}")
+		progress_hook(-1, "done")
+
+	def filter_multilingual_subtiles(self, exclusion=["English"]):
+		multi_lingual_subs = []
+		removed_subs = []
+		for i, sub in enumerate(self.subs_adjusted):
+			if sub.language not in exclusion:
 				multi_lingual_subs.append(sub)
 			else:
 				removed_subs.append(sub)
-			progress_hook(i, f"{i}/{len(self.subs_adjusted)}: {sub.text}")
 		self.subs_adjusted = multi_lingual_subs
 		self.subs_removed = removed_subs
-		progress_hook(-1, "done")
 
 	# This funxion is is used to only get the snippets of the audio that appear in subs_adjusted after language filtration or cropping, irregardless of the vocal splitting.
 	# This should be called AFTER filter multilingual and BEFORE vocal isolation. Not useful yet

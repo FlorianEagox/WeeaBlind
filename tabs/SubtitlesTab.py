@@ -104,26 +104,19 @@ class SubtitlesTab(wx.Panel):
 			def run_after():
 				self.update_langs()
 				self.create_entries()
-				self.context.update_voices_list()
 				dialog.Destroy()
 			if progress == -1:
 				return wx.CallAfter(run_after)
 			else:
 				wx.CallAfter(dialog.Update, progress, status)
-		threading.Thread(target=app_state.video.filter_multilingual_subtiles, args=(update_progress,)).start()
+		threading.Thread(target=app_state.video.detect_subs_lang, args=(update_progress, )).start()
 
 	def filter_language(self, event):
-		dialog = wx.ProgressDialog("Filtering Subtitles", "starting", len(app_state.video.subs_adjusted), self)
-		def update_progress(progress, status):
-			def run_after():
-				self.create_entries()
-				self.context.update_voices_list()
-				dialog.Destroy()
-			if progress == -1:
-				return wx.CallAfter(run_after)
-			else:
-				wx.CallAfter(dialog.Update, progress, status)
-		threading.Thread(target=app_state.video.filter_multilingual_subtiles, args=(update_progress,)).start()
+		exclusions = self.lb_detected_langs.CheckedStrings
+		print("GWEEP", exclusions)
+		app_state.video.filter_multilingual_subtiles(exclusions)
+		self.update_langs()
+		self.create_entries()
 
 
 	def create_entries(self):
@@ -141,7 +134,7 @@ class SubtitlesTab(wx.Panel):
 
 	def update_langs(self):
 		self.lb_detected_langs.Clear()
-		self.lb_detected_langs.AppendItems(list(set(sub.language for sub in app_state.video.subs_adjusted)))
+		self.lb_detected_langs.AppendItems(sorted(list(set(sub.language for sub in app_state.video.subs_adjusted))))
 		self.Layout()
 
 	def remove_langs(self, event):

@@ -44,6 +44,8 @@ class ListStreamsTab(wx.Panel):
 		btn_sample_mix = wx.Button(self, label="Preview Mix")
 		btn_sample_mix.Bind(wx.EVT_BUTTON, self.sample_mix)
 		
+		btn_remix_audio = wx.Button(self, label="Remix Video")
+		btn_remix_audio.Bind(wx.EVT_BUTTON, self.remix_audio)
 
 		# Create a sizer for layout
 		sizer = wx.BoxSizer(wx.VERTICAL)
@@ -56,9 +58,11 @@ class ListStreamsTab(wx.Panel):
 		self.scroll_sizer.Add(lbl_import_external, 0, wx.ALL | wx.CENTER, 5)
 		self.scroll_sizer.Add(self.file_import_external, 0, wx.ALL | wx.CENTER, 5)
 		sizer.Add(self.scroll_panel, 1, wx.SHRINK | wx.ALL, border=10)
-		sizer.Add(lbl_mixing_ratio, 0, wx.CENTER, 5)
-		sizer.Add(self.slider_audio_ratio, 0, wx.CENTER, 5)
-		sizer.Add(btn_sample_mix, 0, wx.RIGHT, 1)
+		sizer.Add(lbl_mixing_ratio, 0, wx.ALIGN_CENTER, 5)
+		sizer.Add(self.slider_audio_ratio, 0, wx.ALIGN_CENTER, 5)
+		sizer.Add(btn_sample_mix, 0, wx.ALIGN_CENTER, 1)
+		sizer.Add(btn_remix_audio, 0, wx.ALIGN_CENTER, 1)
+
 		self.SetSizer(sizer)
 
 
@@ -119,3 +123,6 @@ class ListStreamsTab(wx.Panel):
 
 	def sample_mix(self, event):
 		play(app_state.video.sample_mixing())
+
+	def remix_audio(self, event):
+		app_state.video.mix_av(app_state.video.mixing_ratio)

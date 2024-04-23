@@ -11,6 +11,7 @@ from video import Video
 import app_state
 import feature_support
 from Voice import Voice
+import os
 
 class GUI(wx.Panel):
 	def __init__(self, parent):
@@ -75,10 +76,10 @@ class GUI(wx.Panel):
 		sizer.Add(self.chk_match_rate, pos=(6, 0), span=(1, 2), flag=wx.LEFT | wx.TOP, border=5)
 		sizer.Add(self.lb_voices, pos=(7, 0), span=(2, 1), flag=wx.EXPAND | wx.LEFT | wx.TOP, border=5)
 		sizer.Add(btn_new_speaker, pos=(9, 0), span=(1, 1), flag=wx.LEFT, border=5)
-		sizer.Add(tab_control, pos=(7, 1), span=(2, 3), flag=wx.EXPAND | wx.ALL, border=5)
+		sizer.Add(tab_control, pos=(7, 1), span=(2, 3), flag=wx.SHRINK | wx.ALL, border=5)
 		sizer.Add(btn_run_dub, pos=(10, 2), span=(1, 1), flag=wx.ALIGN_RIGHT | wx.RIGHT | wx.BOTTOM, border=5)
-		sizer.AddGrowableCol(1)
-		sizer.AddGrowableRow(7)
+		# sizer.AddGrowableCol(1)
+		# sizer.AddGrowableRow(7)
 		self.tab_voice_config.update_voice_fields(None)
 
 		self.SetSizerAndFit(sizer)
@@ -188,10 +189,10 @@ class GUI(wx.Panel):
 if __name__ == '__main__':
 	utils.create_output_dir()
 	app = wx.App(False)
-	frame = wx.Frame(None, wx.ID_ANY, utils.APP_NAME, size=(850, 900))
+	frame = wx.Frame(None, wx.ID_ANY, utils.APP_NAME, size=(1270, 1000))
 	frame.Center()
-	icon_path = "logo.png" if not utils.is_deployed else wx.IconLocation(sys.executable, 0)
-	frame.SetIcon(wx.Icon(icon_path))
+	icon_path = "logo.ico" if not utils.is_deployed else wx.IconLocation(sys.executable, 0)
+	frame.SetIcon(wx.Icon(os.path.abspath(icon_path), wx.BITMAP_TYPE_ANY))
 	gui = GUI(frame)
 	frame.Show()
 	app.MainLoop()

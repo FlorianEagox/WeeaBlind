@@ -6,6 +6,7 @@ import re
 import feature_support
 from pydub import AudioSegment
 from pydub.playback import play
+import utils
 
 if feature_support.ocr_supported:
 	import video_ocr
@@ -54,7 +55,7 @@ class ListStreamsTab(wx.Panel):
 		self.scroll_sizer.Add(self.rb_subs, 0, wx.ALL | wx.EXPAND, 5)
 		self.scroll_sizer.Add(lbl_import_external, 0, wx.ALL | wx.CENTER, 5)
 		self.scroll_sizer.Add(self.file_import_external, 0, wx.ALL | wx.CENTER, 5)
-		sizer.Add(self.scroll_panel, 1, wx.EXPAND | wx.ALL, border=10)
+		sizer.Add(self.scroll_panel, 1, wx.SHRINK | wx.ALL, border=10)
 		sizer.Add(lbl_mixing_ratio, 0, wx.CENTER, 5)
 		sizer.Add(self.slider_audio_ratio, 0, wx.CENTER, 5)
 		sizer.Add(btn_sample_mix, 0, wx.RIGHT, 1)
@@ -107,7 +108,7 @@ class ListStreamsTab(wx.Panel):
 		self.context.tab_subtitles.create_entries()
 	
 	def remove_vocals(self, event):
-		vocal_isolation.seperate_file(app_state.video)
+		utils.attempt_long_running_task(lambda: vocal_isolation.seperate_file(app_state.video), self, "Spleeter Seperating Vocals", "Attempting to Seperate Vocals with Spleeter")
 
 	def import_subs(self, event):
 		app_state.video.change_subs(external_path=self.file_import_external.GetPath())

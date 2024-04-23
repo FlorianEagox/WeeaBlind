@@ -24,7 +24,7 @@ def create_output_dir():
 	if not os.path.exists(path):
 		os.makedirs(path)
 
-def get_output_path(input, suffix, prefix='', path=''):
+def get_output_path(input, suffix='', prefix='', path=''):
 	filename = os.path.basename(input)
 	filename_without_extension = os.path.splitext(filename)[0]
 	return os.path.join(os.path.dirname(os.path.abspath(root)), 'output', path, f"{prefix}{filename_without_extension}{suffix}")
@@ -59,5 +59,17 @@ def find_nearest(array, value):
 
 def sampleVoice(text, output=default_sample_path):
 	play(AudioSegment.from_file(app_state.sample_speaker.speak(text, output)))
+
+def attempt_long_running_task(function, parent, prompt, description):
+	import wx
+	msg_loading = wx.ProgressDialog(description, prompt, parent=parent, style=wx.PD_AUTO_HIDE | wx.PD_SMOOTH)
+	msg_loading.Update(1)
+	parent.Update()
+	try:
+		function()
+	except Exception as e:
+		print(e)
+		wx.MessageBox(f"Something Went wrong Performing {prompt} \n\n{e}", "Something went wrong", wx.ICON_ERROR, parent)
+	msg_loading.Destroy()
 
 snippet_export_path = get_output_path("video_snippet", ".wav")

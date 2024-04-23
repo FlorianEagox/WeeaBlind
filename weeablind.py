@@ -191,7 +191,7 @@ if __name__ == '__main__':
 	app = wx.App(False)
 	frame = wx.Frame(None, wx.ID_ANY, utils.APP_NAME, size=(1270, 1000))
 	frame.Center()
-	icon_path = "logo.ico" if not utils.is_deployed else wx.IconLocation(sys.executable, 0)
+	icon_path = "logo.ico" if not utils.is_deployed else wx.IconLocation(sys.executable, 0) if app_state.platform == 'win32' else '_internal/logo.ico'
 	frame.SetIcon(wx.Icon(os.path.abspath(icon_path), wx.BITMAP_TYPE_ANY))
 	gui = GUI(frame)
 	frame.Show()

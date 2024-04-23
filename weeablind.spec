@@ -5,7 +5,7 @@ a = Analysis(
     ['weeablind.py'],
     pathex=[],
     binaries=[],
-    datas=[('logo.png', '.'), ('*.md', '.')],
+    datas=[('*.png', '.'), ('*.ico', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -32,7 +32,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['logo.png'],
+    icon=['logo.ico'],
 )
 coll = COLLECT(
     exe,

@@ -38,6 +38,10 @@ class ListStreamsTab(wx.Panel):
 		self.file_import_external = wx.FilePickerCtrl(self.scroll_panel, message="Import External subtitles file", wildcard="Subtitle Files |*.srt;*.vtt;*.ass")
 		self.file_import_external.Bind(wx.EVT_FILEPICKER_CHANGED, self.import_subs)
 
+		box_mixing = wx.StaticBox(self, label="Audio Mixing Settings")
+		box_mixing_sizer = wx.StaticBoxSizer(box_mixing)
+		box_mixing_grid = wx.GridSizer(2)
+
 		lbl_mixing_ratio = wx.StaticText(self, label="Volume Mixing Ratio")
 		self.slider_audio_ratio = wx.Slider(self, value=50)
 		self.slider_audio_ratio.Bind(wx.EVT_SLIDER, self.change_mix)
@@ -57,11 +61,14 @@ class ListStreamsTab(wx.Panel):
 		self.scroll_sizer.Add(self.rb_subs, 0, wx.ALL | wx.EXPAND, 5)
 		self.scroll_sizer.Add(lbl_import_external, 0, wx.ALL | wx.CENTER, 5)
 		self.scroll_sizer.Add(self.file_import_external, 0, wx.ALL | wx.CENTER, 5)
-		sizer.Add(self.scroll_panel, 1, wx.SHRINK | wx.ALL, border=10)
-		sizer.Add(lbl_mixing_ratio, 0, wx.ALIGN_CENTER, 5)
-		sizer.Add(self.slider_audio_ratio, 0, wx.ALIGN_CENTER, 5)
-		sizer.Add(btn_sample_mix, 0, wx.ALIGN_CENTER, 1)
-		sizer.Add(btn_remix_audio, 0, wx.ALIGN_CENTER, 1)
+		sizer.Add(self.scroll_panel, 1, wx.SHRINK | wx.BOTTOM | wx.EXPAND | wx.RIGHT, border=10)
+		
+		box_mixing_grid.Add(lbl_mixing_ratio)
+		box_mixing_grid.Add(self.slider_audio_ratio)
+		box_mixing_grid.Add(btn_sample_mix)
+		box_mixing_grid.Add(btn_remix_audio)
+		box_mixing_sizer.Add(box_mixing_grid, 1)
+		sizer.Add(box_mixing_sizer, 1, wx.ALIGN_CENTER | wx.SHRINK | wx.BOTTOM, 5)
 
 		self.SetSizer(sizer)
 

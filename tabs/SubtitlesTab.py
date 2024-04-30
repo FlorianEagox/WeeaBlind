@@ -87,6 +87,9 @@ class SubtitlesTab(wx.Panel):
 		tb_controls.AddControl(btn_export_clone)
 		tb_controls.Realize()
 
+		self.lbl_subs_placecholder = wx.StaticText(self.scroll_panel, label="No Subtitles Loaded")
+		self.scroll_sizer.Add(self.lbl_subs_placecholder, 0, wx.CENTER)
+
 		main_sizer = wx.BoxSizer(wx.VERTICAL)
 		main_sizer.Add(tb_controls, 0, wx.CENTER)
 		main_sizer.Add(self.scroll_panel, 1, wx.EXPAND | wx.ALL, border=10)

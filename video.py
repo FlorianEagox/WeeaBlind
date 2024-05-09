@@ -48,18 +48,20 @@ class Video:
 			'outtmpl': 'output/%(id)s.%(ext)s',
 			'writesubtitles': True,
 			'writeautomaticsub': True,
-			"progress_hooks": (progress_hook,)
+			"progress_hooks": (progress_hook,),
+			"listsubs": True
 		}
 		if lang:
-			options["writeautomaticsub"] = False
-			options["subtitleslangs"] = lang.split(',')
+			# options["writeautomaticsub"] = False
+			options["subtitleslangs"] = (".*" + lang + ".*").split(',')
 		else:
 			options["subtitleslangs"] = ["all"]
 		try:
 			with YoutubeDL(options) as ydl:
+				
 				info = ydl.extract_info(link)
 				output = ydl.prepare_filename(info)
-				subs = info["automatic_captions"] | info["subtitles"]
+				subs = info["subtitles"] | info["automatic_captions"]
 				print("SUBS:", subs)
 				subs = {k:v for k, v in subs.items() if v[-1].get("filepath", None)}
 				print("Detected Subtitles\n", subs)

@@ -17,7 +17,6 @@ def is_executable(program):
 		subprocess.run(program, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, check=True)
 		return True
 	except Exception as e:
-		print(program, e)
 		return False
 
 def check_ffmpeg():

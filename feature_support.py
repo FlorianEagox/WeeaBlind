@@ -36,7 +36,7 @@ vocal_isolation_supported = is_module_available("spleeter")
 downloads_supported = is_module_available("yt_dlp")
 espeak_supported = is_module_available("espeakng") and (is_executable(["espeak", "--version"]) or is_executable(["espeak-ng", "--version"]))
 coqui_supported = is_module_available("TTS") # and espeak_supported
-torch_supported = is_module_available("torch")
+torch_supported = is_module_available("torch.cuda")
 gpu_supported = False
 if torch_supported:
 	from torch.cuda import is_available

@@ -61,14 +61,14 @@ class ListStreamsTab(wx.Panel):
 		self.scroll_sizer.Add(self.rb_subs, 0, wx.ALL | wx.EXPAND, 5)
 		self.scroll_sizer.Add(lbl_import_external, 0, wx.ALL | wx.CENTER, 5)
 		self.scroll_sizer.Add(self.file_import_external, 0, wx.ALL | wx.CENTER, 5)
-		sizer.Add(self.scroll_panel, 1, wx.SHRINK | wx.BOTTOM | wx.EXPAND | wx.RIGHT, border=10)
+		sizer.Add(self.scroll_panel, 1, wx.SHRINK | wx.ALL | wx.EXPAND | wx.RIGHT, border=10)
 		
 		box_mixing_grid.Add(lbl_mixing_ratio)
 		box_mixing_grid.Add(self.slider_audio_ratio)
 		box_mixing_grid.Add(btn_sample_mix)
 		box_mixing_grid.Add(btn_remix_audio)
 		box_mixing_sizer.Add(box_mixing_grid, 1)
-		sizer.Add(box_mixing_sizer, 1, wx.ALIGN_CENTER | wx.SHRINK | wx.BOTTOM, 5)
+		sizer.Add(box_mixing_sizer, 0, wx.ALIGN_CENTER | wx.SHRINK | wx.ALL, 5)
 
 		self.SetSizer(sizer)
 
@@ -99,6 +99,7 @@ class ListStreamsTab(wx.Panel):
 		self.scroll_sizer.Replace(_rb_subs_copy, self.rb_subs)
 		_rb_subs_copy.Destroy()
 		self.scroll_panel.SetSizerAndFit(self.scroll_sizer)
+		self.Fit()
 		self.Layout()
 
 	def on_audio_selection(self, event):
@@ -113,8 +114,11 @@ class ListStreamsTab(wx.Panel):
 		frames = video_ocr.perform_video_ocr(app_state.video.file, sample_rate=1)
 		ocr_subs = []
 		for index, frame in enumerate(frames):
-			if sum(not char.isspace() for char in frame.text) > 6 and not nonsense(frame.text):
-				ocr_subs.append(dub_line.DubbedLine(frame.ts_second, -1, frame.text, index))
+			try:
+				if sum(not char.isspace() for char in frame.text) > 6 and not nonsense(frame.text):
+					ocr_subs.append(dub_line.DubbedLine(frame.ts_second, -1, frame.text, index))
+			except Exception as e:
+					print(e)
 		app_state.video.subs_adjusted = ocr_subs
 		self.context.tab_subtitles.create_entries()
 	

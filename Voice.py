@@ -135,14 +135,15 @@ class CoquiVoice(Voice):
 			else:
 				self.voice.load_tts_model_by_name(voice)
 			self.voice_option = self.voice.model_name
-
+		self.is_multispeaker = self.voice.is_multi_speaker
 		if "xtts" in self.voice.model_name or self.use_vc:
 			self.is_clonable = True
+			# self.is_multispeaker = False
 		if use_vc is not None:
 			self.use_vc = use_vc
 		if speaker_wav is not None:
 			self.speaker_wav = speaker_wav
-		self.is_multispeaker = self.voice.is_multi_speaker
+		
 		self.speaker = speaker
 
 	def list_voice_options(self):

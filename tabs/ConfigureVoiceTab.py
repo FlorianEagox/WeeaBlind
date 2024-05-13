@@ -153,9 +153,9 @@ class ConfigureVoiceTab(wx.Panel):
 			app_state.sample_speaker.set_voice_params(voice=option_name)
 			if app_state.sample_speaker.voice_type == Voice.VoiceType.COQUI:
 				app_state.sample_speaker.set_voice_params(speaker_wav=self.file_speaker_wav.GetPath())
-				app_state.sample_speaker.set_voice_params(use_vc=self.chk_speaker_wav.IsChecked())
 				if app_state.sample_speaker.is_multispeaker:
 					app_state.sample_speaker.set_voice_params(speaker=self.cb_speaker_voices.GetStringSelection())
+				app_state.sample_speaker.set_voice_params(use_vc=self.chk_speaker_wav.IsChecked())
 				try:
 					dialog_download.Destroy()
 				except:

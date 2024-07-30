@@ -143,8 +143,8 @@ class CoquiVoice(Voice):
 			self.use_vc = use_vc
 		if speaker_wav is not None:
 			self.speaker_wav = speaker_wav
-		
-		self.speaker = speaker
+		if speaker is not None:
+			self.speaker = speaker
 
 	def list_voice_options(self):
 		return self.voice.models
